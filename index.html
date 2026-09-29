@@ -676,14 +676,21 @@ async function saveAccount(){
   const fn=id?'admin-update-user':'admin-create-user';
   const body={name:name,email:email,role:role,status:status,permissions:permissions,password:password};
   if(id) body.id=id;
-  const res=await sb.functions.invoke(fn,{body:body});
-  if(res.error || (res.data && res.data.error)){
-    toast((res.data && res.data.error) || res.error.message || 'تعذر حفظ الحساب');
-    return;
+  showBlocking(id?'جاري تحديث الحساب':'جاري إنشاء الحساب',id?'يتم حفظ التعديلات والصلاحيات...':'يتم إنشاء الحساب وحفظ الصلاحيات أونلاين...');
+  try{
+    const res=await sb.functions.invoke(fn,{body:body});
+    if(res.error || (res.data && res.data.error)){
+      toast(await getFunctionError(res,'تعذر حفظ الحساب'));
+      return;
+    }
+    closeAccountModal();
+    await loadAccounts();
+    toast(id?'تم تحديث الحساب بنجاح':'تم إنشاء الحساب بنجاح');
+  }catch(e){
+    toast(e && e.message ? e.message : 'حدث خطأ غير متوقع أثناء حفظ الحساب');
+  }finally{
+    hideBlocking();
   }
-  closeAccountModal();
-  await loadAccounts();
-  toast('تم حفظ الحساب أونلاين');
 }
 function renderAccounts(){
   let users=usersCache.slice();
