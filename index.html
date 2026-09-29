@@ -722,15 +722,22 @@ async function toggleAccount(id){
   if(!u || u.role==='system_admin') return;
   const next=u.status==='active'?'inactive':'active';
   if(!confirm((next==='inactive'?'تعطيل':'تفعيل')+' حساب '+u.full_name+'؟')) return;
-  const res=await sb.functions.invoke('admin-update-user',{body:{
-    id:u.id,name:u.full_name,email:u.email,role:u.role,status:next,permissions:u.permissions||[],password:''
-  }});
-  if(res.error || (res.data && res.data.error)){
-    toast((res.data && res.data.error)||res.error.message||'تعذر تحديث الحساب');
-    return;
+  showBlocking(next==='inactive'?'جاري تعطيل الحساب':'جاري تفعيل الحساب','يتم تحديث حالة الحساب...');
+  try{
+    const res=await sb.functions.invoke('admin-update-user',{body:{
+      id:u.id,name:u.full_name,email:u.email,role:u.role,status:next,permissions:u.permissions||[],password:''
+    }});
+    if(res.error || (res.data && res.data.error)){
+      toast(await getFunctionError(res,'تعذر تحديث الحساب'));
+      return;
+    }
+    await loadAccounts();
+    toast(next==='inactive'?'تم تعطيل الحساب':'تم تفعيل الحساب');
+  }catch(e){
+    toast(e && e.message ? e.message : 'حدث خطأ أثناء تحديث الحساب');
+  }finally{
+    hideBlocking();
   }
-  await loadAccounts();
-  toast(next==='inactive'?'تم تعطيل الحساب':'تم تفعيل الحساب');
 }
 function setAccountFilter(f,el){
   accountFilter=f;
