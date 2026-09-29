@@ -445,6 +445,39 @@ function showOnly(id){
   ['setupView','loginView','appView'].forEach(function(x){document.getElementById(x).classList.add('hidden')});
   document.getElementById(id).classList.remove('hidden');
 }
+
+let blockingDepth=0;
+function showBlocking(title,message){
+  blockingDepth++;
+  document.getElementById('blockingTitle').textContent=title||'جاري التنفيذ';
+  document.getElementById('blockingMessage').textContent=message||'يرجى الانتظار...';
+  const overlay=document.getElementById('blockingOverlay');
+  overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden','false');
+  document.body.classList.add('is-blocked');
+}
+function hideBlocking(force){
+  blockingDepth=force?0:Math.max(0,blockingDepth-1);
+  if(blockingDepth>0)return;
+  const overlay=document.getElementById('blockingOverlay');
+  overlay.classList.add('hidden');
+  overlay.setAttribute('aria-hidden','true');
+  document.body.classList.remove('is-blocked');
+}
+async function getFunctionError(res,fallback){
+  if(res && res.data && res.data.error) return String(res.data.error);
+  if(res && res.error){
+    try{
+      const ctx=res.error.context;
+      if(ctx && typeof ctx.clone==='function'){
+        const body=await ctx.clone().json();
+        if(body && body.error) return String(body.error);
+      }
+    }catch(_){}
+    if(res.error.message && res.error.message!=='Edge Function returned a non-2xx status code') return res.error.message;
+  }
+  return fallback;
+}
 async function init(){
   try{
     const boot=await sb.rpc('bootstrap_status');
