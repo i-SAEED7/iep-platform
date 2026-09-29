@@ -499,31 +499,36 @@ async function createFirstAdmin(){
   const name=setupName.value.trim();
   const email=setupEmail.value.trim().toLowerCase();
   const pass=setupPassword.value;
-  if(!name || !email || pass.length<12){
-    toast('أدخل الاسم والبريد وكلمة مرور من 12 حرفًا على الأقل');
-    return;
-  }
-  const btn=event && event.target ? event.target : null;
-  if(btn){btn.disabled=true;btn.textContent='جاري الإنشاء...'}
-  const res=await sb.functions.invoke('bootstrap-admin',{body:{name:name,email:email,password:pass}});
-  if(btn){btn.disabled=false;btn.textContent='إنشاء حساب مدير النظام'}
-  if(res.error || (res.data && res.data.error)){
-    toast((res.data && res.data.error) || res.error.message || 'تعذر إنشاء الحساب');
-    return;
-  }
-  setupPassword.value='';
-  loginEmail.value=email;
-  loginPassword.value=pass;
-  await login();
+  if(!name || !email || pass.length<12){toast('أدخل الاسم والبريد وكلمة مرور من 12 حرفًا على الأقل');return}
+  showBlocking('جاري إنشاء مدير النظام','يتم تجهيز الحساب وحفظه أونلاين...');
+  try{
+    const res=await sb.functions.invoke('bootstrap-admin',{body:{name:name,email:email,password:pass}});
+    if(res.error || (res.data && res.data.error)){toast(await getFunctionError(res,'تعذر إنشاء حساب مدير النظام'));return}
+    setupPassword.value='';
+    loginEmail.value=email;
+    loginPassword.value=pass;
+    await login(true);
+  }catch(e){
+    toast(e && e.message ? e.message : 'حدث خطأ أثناء إنشاء حساب مدير النظام');
+  }finally{hideBlocking()}
 }
-async function login(){
+
+async function login(alreadyBlocking){
   const email=loginEmail.value.trim().toLowerCase();
   const pass=loginPassword.value;
   if(!email || !pass){toast('أدخل البريد وكلمة المرور');return}
-  const res=await sb.auth.signInWithPassword({email:email,password:pass});
-  if(res.error){toast('بيانات الدخول غير صحيحة');return}
-  await loadCurrentUser();
+  if(!alreadyBlocking) showBlocking('جاري تسجيل الدخول','يتم التحقق من بيانات الحساب...');
+  try{
+    const res=await sb.auth.signInWithPassword({email:email,password:pass});
+    if(res.error){toast('بيانات الدخول غير صحيحة');return}
+    await loadCurrentUser();
+  }catch(e){
+    toast(e && e.message ? e.message : 'تعذر تسجيل الدخول');
+  }finally{
+    if(!alreadyBlocking) hideBlocking();
+  }
 }
+
 async function loadCurrentUser(){
   const userRes=await sb.auth.getUser();
   const authUser=userRes.data && userRes.data.user;
