@@ -173,6 +173,14 @@ tr:last-child td{border-bottom:0}
 }
 .inline{display:flex;gap:8px;align-items:center}
 .role-summary{font-size:11px;color:var(--muted)}
+.blocking-overlay{position:fixed;inset:0;z-index:99999;background:rgba(15,35,55,.46);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:22px}
+.blocking-overlay.hidden{display:none!important}
+.blocking-box{width:min(92vw,360px);background:#fff;border-radius:26px;padding:28px 22px;text-align:center;box-shadow:0 24px 80px rgba(10,35,55,.25)}
+.blocking-spinner{width:54px;height:54px;margin:0 auto 16px;border-radius:50%;border:4px solid #dceaf2;border-top-color:var(--navy);animation:blockingSpin .82s linear infinite}
+.blocking-box h3{margin:0 0 7px;font-size:18px;color:var(--text)}
+.blocking-box p{margin:0;color:var(--muted);font-size:13px;line-height:1.8}
+body.is-blocked{overflow:hidden;touch-action:none}
+@keyframes blockingSpin{to{transform:rotate(360deg)}}
 @media(min-width:720px){
   .kpis{grid-template-columns:repeat(4,1fr)}
   .form-grid.two{grid-template-columns:1fr 1fr}
@@ -375,6 +383,13 @@ tr:last-child td{border-bottom:0}
     <h3>استعادة كلمة المرور</h3>
     <p class="muted small">في هذه المرحلة يغيّر مدير النظام كلمة مرور الحساب من شاشة إدارة الحسابات.</p>
     <button class="btn primary" onclick="closeResetLocal()">حسنًا</button>
+  </div>
+</div>
+<div id="blockingOverlay" class="blocking-overlay hidden" aria-hidden="true">
+  <div class="blocking-box" role="status" aria-live="polite">
+    <div class="blocking-spinner"></div>
+    <h3 id="blockingTitle">جاري التنفيذ</h3>
+    <p id="blockingMessage">يرجى الانتظار...</p>
   </div>
 </div>
 <div id="toast" class="toast"></div>
