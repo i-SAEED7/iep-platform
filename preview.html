@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>مبادرة نحو خطة تربوية فردية رقمية تفاعلية</title>
+<style>
+:root{
+  --navy-950:#102c46;
+  --navy-900:#153a5b;
+  --navy-800:#1d4d73;
+  --blue-700:#2f6f9f;
+  --teal-700:#177f82;
+  --teal-600:#1c9494;
+  --teal-100:#e9f6f4;
+  --bg:#f5f7fa;
+  --surface:#ffffff;
+  --surface-soft:#f9fbfc;
+  --surface-muted:#f1f5f8;
+  --text:#17324d;
+  --text-soft:#536b80;
+  --muted:#718396;
+  --line:#dde6ed;
+  --line-strong:#cbd8e2;
+  --ok:#267a4f;
+  --ok-bg:#edf8f1;
+  --warn:#926515;
+  --warn-bg:#fff8e8;
+  --danger:#a23849;
+  --danger-bg:#fff1f3;
+  --info:#2c6b97;
+  --shadow-sm:0 2px 8px rgba(16,44,70,.05);
+  --shadow-md:0 10px 28px rgba(16,44,70,.08);
+  --shadow-lg:0 22px 60px rgba(16,44,70,.14);
+  --r-sm:10px;
+  --r-md:14px;
+  --r-lg:18px;
+  --r-xl:24px;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --t-fast:160ms;
+  --t:220ms;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;background:var(--bg)}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;
+  line-height:1.6;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.58}
+a{color:inherit}
+.hidden{display:none!important}
+.app{min-height:100vh}
+::selection{background:#cfe7e4;color:var(--navy-950)}
+
+:focus-visible{
+  outline:3px solid rgba(28,148,148,.34);
+  outline-offset:2px;
+  border-radius:8px;
+}
+input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:none;
+}
+
+.center-page{
+  min-height:100vh;display:grid;place-items:center;padding:28px 16px;background:var(--bg)
+}
+.auth-card{
+  position:relative;width:min(100%,470px);background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r-xl);padding:24px;
+  box-shadow:var(--shadow-md);overflow:hidden
+}
+.auth-card::before{
+  content:"";position:absolute;top:0;right:0;left:0;height:4px;background:var(--teal-600)
+}
+.logo,.brand-mini{
+  background:var(--navy-900);color:#fff;display:grid;place-items:center;font-weight:900
+}
+.logo{
+  width:58px;height:58px;border-radius:16px;font-size:24px;margin-bottom:16px;
+  box-shadow:0 8px 18px rgba(21,58,91,.16)
+}
+.eyebrow{
+  color:var(--teal-700);font-weight:800;font-size:12px;letter-spacing:.01em
+}
+h1,h2,h3,p{margin-top:0}
+h1,h2,h3{letter-spacing:-.015em}
+.auth-card h1{font-size:24px;line-height:1.5;margin:4px 0 8px}
+.auth-card .form-grid{margin-top:18px}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+
+.topbar{
+  position:sticky;top:0;z-index:40;background:var(--surface);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:11px;
+  min-height:64px;padding:10px 14px
+}
+.brand-mini{
+  width:40px;height:40px;border-radius:12px;font-size:17px;flex:0 0 auto
+}
+.brand-copy{flex:1;min-width:0}
+.brand-copy small{display:block;color:var(--teal-700);font-weight:800;font-size:11px}
+.brand-copy strong{
+  display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:var(--navy-950)
+}
+.user-chip{
+  min-height:40px;border:1px solid var(--line);background:var(--surface);
+  border-radius:999px;padding:8px 12px;font-size:11px;font-weight:800;color:var(--navy-900);
+  transition:border-color var(--t-fast) var(--ease),background var(--t-fast) var(--ease),transform var(--t-fast) var(--ease)
+}
+.user-chip:hover{border-color:var(--line-strong);background:var(--surface-soft)}
+.user-chip:active{transform:translateY(1px)}
+
+.shell{max-width:1280px;margin:auto;padding:16px 14px 96px}
+.hero{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);
+  padding:22px 18px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden
+}
+.hero::after{
+  content:"";position:absolute;top:0;right:0;width:5px;height:100%;background:var(--teal-600)
+}
+.hero h1{font-size:25px;line-height:1.48;margin:4px 0 7px;color:var(--navy-950)}
+.hero p{color:var(--text-soft);font-size:13px;margin:0;max-width:760px}
+
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:14px}
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:16px;box-shadow:var(--shadow-sm);
+  transition:border-color var(--t) var(--ease),box-shadow var(--t) var(--ease),transform var(--t) var(--ease)
+}
+.card:hover{border-color:var(--line-strong);box-shadow:0 8px 24px rgba(16,44,70,.07)}
+.kpi{min-height:116px;display:flex;flex-direction:column;justify-content:center}
+.kpi .num{font-size:30px;line-height:1.15;font-weight:900;color:var(--navy-900);margin:4px 0}
+
+.section-head{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+  margin:24px 2px 11px
+}
+.section-head>div{min-width:0}
+.section-head h2{font-size:19px;line-height:1.4;margin:0;color:var(--navy-950)}
+.section-head p{font-size:12px;color:var(--muted);margin:4px 0 0}
+
+.btn{
+  min-height:44px;border:1px solid transparent;border-radius:var(--r-md);padding:10px 15px;
+  font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  transition:background var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease),
+             color var(--t-fast) var(--ease),box-shadow var(--t-fast) var(--ease),
+             transform var(--t-fast) var(--ease)
+}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn.primary{background:var(--navy-900);color:#fff}
+.btn.primary:hover{background:var(--navy-800);box-shadow:0 6px 16px rgba(21,58,91,.15)}
+.btn.teal{background:var(--teal-700);color:#fff}
+.btn.teal:hover{background:#126f72}
+.btn.light{background:var(--surface-muted);color:var(--navy-950);border-color:var(--line)}
+.btn.light:hover{background:#eaf0f4}
+.btn.outline{background:var(--surface);border-color:var(--line-strong);color:var(--navy-900)}
+.btn.outline:hover{background:var(--surface-soft);border-color:#b9cad6}
+.btn.danger{background:var(--danger-bg);color:var(--danger);border-color:#efc9d0}
+.btn.danger:hover{background:#ffe8ec}
+.btn.sm{min-height:36px;padding:7px 10px;border-radius:10px;font-size:11px}
+
+.form-grid{display:grid;gap:12px}
+.field label{
+  display:block;font-size:12px;font-weight:800;margin:0 2px 6px;color:var(--navy-950)
+}
+.field input,.field select,.field textarea{
+  width:100%;min-height:46px;border:1px solid var(--line-strong);background:var(--surface);
+  border-radius:var(--r-md);padding:11px 12px;color:var(--text);outline:none;
+  transition:border-color var(--t-fast) var(--ease),box-shadow var(--t-fast) var(--ease),background var(--t-fast) var(--ease)
+}
+.field input:hover,.field select:hover,.field textarea:hover{border-color:#b4c7d4}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--teal-600);box-shadow:0 0 0 4px rgba(28,148,148,.10);background:#fff
+}
+.field textarea{min-height:96px;resize:vertical}
+input[type="email"],#loginEmail,#setupEmail,#accEmail{
+  direction:ltr;text-align:left;unicode-bidi:plaintext
+}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+
+.note{
+  padding:12px 14px;border:1px solid #cfe5e1;background:#f1faf8;
+  border-radius:var(--r-md);color:#23645d;font-size:12px
+}
+.note.warn,.warn{border-color:#ead8a5;background:var(--warn-bg);color:#755617}
+.danger-note{border-color:#efc9d0;background:var(--danger-bg);color:#8f2938}
+
+.list{display:grid;gap:10px}
+.row{
+  display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-lg);padding:13px 14px;
+  transition:border-color var(--t-fast) var(--ease),background var(--t-fast) var(--ease),box-shadow var(--t-fast) var(--ease)
+}
+.row:hover{border-color:var(--line-strong);background:#fcfdfe;box-shadow:var(--shadow-sm)}
+.row .ico{
+  width:44px;height:44px;border-radius:12px;background:#eef5f8;color:var(--navy-800);
+  display:grid;place-items:center;font-size:20px;flex:0 0 auto
+}
+.row .grow{flex:1;min-width:0}
+.row strong{display:block;color:var(--navy-950)}
+.row small{display:block;color:var(--muted);margin-top:2px}
+
+.tag{
+  display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:5px 9px;
+  font-size:10px;font-weight:800;background:#eef5fa;color:var(--info);white-space:nowrap
+}
+.tag.ok{background:var(--ok-bg);color:var(--ok)}
+.tag.warn{background:var(--warn-bg);color:var(--warn);border:0}
+.tag.off{background:#f0f2f4;color:#65717a}
+
+.empty{
+  border:1px dashed #c8d6e0;background:var(--surface);border-radius:var(--r-xl);
+  padding:30px 20px;text-align:center;box-shadow:var(--shadow-sm)
+}
+.empty .big{font-size:34px;margin-bottom:8px}
+.empty strong{display:block;color:var(--navy-950);font-size:15px}
+.empty p{margin:6px auto 0;color:var(--muted);font-size:12px;max-width:540px}
+
+.tabs{
+  display:flex;gap:7px;overflow:auto;padding:3px 1px 11px;scrollbar-width:thin
+}
+.tab{
+  min-height:38px;border:1px solid var(--line);background:var(--surface);color:var(--text-soft);
+  padding:8px 12px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap;
+  transition:background var(--t-fast) var(--ease),color var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease)
+}
+.tab:hover{border-color:var(--line-strong);color:var(--navy-900)}
+.tab.active{background:var(--navy-900);color:#fff;border-color:var(--navy-900)}
+
+.screen{display:none}
+.screen.active{display:block;animation:screenIn var(--t) var(--ease) both}
+@keyframes screenIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.bottom-nav{
+  position:fixed;bottom:0;right:0;left:0;z-index:55;background:var(--surface);
+  border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);
+  padding:7px 8px calc(7px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px rgba(16,44,70,.06)
+}
+.nav-btn{
+  min-height:54px;border:0;background:transparent;color:var(--muted);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;padding:4px 2px;font-size:10px;font-weight:800;border-radius:12px;
+  transition:background var(--t-fast) var(--ease),color var(--t-fast) var(--ease),transform var(--t-fast) var(--ease)
+}
+.nav-btn span{font-size:18px;line-height:1}
+.nav-btn:hover{background:var(--surface-muted);color:var(--navy-800)}
+.nav-btn:active{transform:scale(.98)}
+.nav-btn.active{color:var(--navy-900);background:#edf4f8}
+.side{display:none}
+
+.drawer,.modal{
+  position:fixed;inset:0;background:rgba(16,44,70,.38);z-index:90;
+  display:none;align-items:flex-end
+}
+.drawer.open,.modal.open{display:flex;animation:overlayIn var(--t-fast) ease-out both}
+.drawer-card,.modal-card{
+  width:100%;background:var(--surface);border-radius:22px 22px 0 0;
+  padding:17px 14px calc(22px + env(safe-area-inset-bottom));
+  max-height:90vh;overflow:auto;box-shadow:var(--shadow-lg)
+}
+.drawer.open .drawer-card{animation:sheetIn var(--t) var(--ease) both}
+.modal.open .modal-card{animation:sheetIn var(--t) var(--ease) both}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+@keyframes sheetIn{from{opacity:.8;transform:translateY(14px)}to{opacity:1;transform:none}}
+.handle{width:44px;height:4px;background:#d1dde5;border-radius:999px;margin:0 auto 16px}
+.menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.menu-item{
+  min-height:76px;border:1px solid var(--line);background:var(--surface);
+  border-radius:var(--r-lg);padding:14px;text-align:right;font-weight:800;color:var(--navy-950);
+  transition:background var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease),transform var(--t-fast) var(--ease)
+}
+.menu-item:hover{background:var(--surface-soft);border-color:var(--line-strong)}
+.menu-item:active{transform:translateY(1px)}
+.menu-item small{display:block;color:var(--muted);font-weight:500;margin-top:3px}
+
+.permission-grid{display:grid;gap:8px}
+.perm{
+  display:flex;align-items:center;gap:10px;padding:11px 12px;background:var(--surface-soft);
+  border:1px solid var(--line);border-radius:var(--r-md)
+}
+.perm input{width:19px;height:19px;accent-color:var(--teal-700);flex:0 0 auto}
+.perm label{font-size:12px;font-weight:700;flex:1;color:var(--text)}
+
+.table-card{
+  overflow:auto;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);
+  box-shadow:var(--shadow-sm);scrollbar-width:thin
+}
+table{width:100%;border-collapse:separate;border-spacing:0;min-width:760px}
+th,td{
+  padding:13px 12px;border-bottom:1px solid var(--line);text-align:right;
+  font-size:12px;vertical-align:middle
+}
+th{
+  position:sticky;top:0;z-index:1;background:#f3f7fa;color:var(--navy-900);font-weight:800;
+  border-bottom-color:var(--line-strong)
+}
+tbody tr{transition:background var(--t-fast) var(--ease)}
+tbody tr:hover{background:#f9fbfd}
+tr:last-child td{border-bottom:0}
+td:nth-child(2){direction:ltr;text-align:left;unicode-bidi:plaintext}
+
+.toast{
+  position:fixed;left:14px;right:14px;bottom:88px;background:var(--navy-950);color:#fff;
+  border-radius:var(--r-md);padding:12px 14px;z-index:120;display:none;font-size:12px;
+  box-shadow:var(--shadow-lg);border:1px solid rgba(255,255,255,.08)
+}
+.toast.show{display:block;animation:toastIn var(--t) var(--ease) both}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.permission-denied{
+  padding:18px;border:1px dashed #e4b7bf;background:#fff6f7;border-radius:var(--r-lg);color:#862d3b
+}
+.inline{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.role-summary{font-size:11px;color:var(--muted)}
+
+.blocking-overlay{
+  position:fixed;inset:0;z-index:99999;background:rgba(16,44,70,.42);
+  display:flex;align-items:center;justify-content:center;padding:22px
+}
+.blocking-overlay.hidden{display:none!important}
+.blocking-box{
+  width:min(92vw,360px);background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-xl);padding:28px 22px;text-align:center;box-shadow:var(--shadow-lg)
+}
+.blocking-spinner{
+  width:52px;height:52px;margin:0 auto 16px;border-radius:50%;
+  border:4px solid #e1eaf0;border-top-color:var(--teal-700);animation:blockingSpin .82s linear infinite
+}
+.blocking-box h3{margin:0 0 7px;font-size:18px;color:var(--navy-950)}
+.blocking-box p{margin:0;color:var(--muted);font-size:13px;line-height:1.8}
+body.is-blocked{overflow:hidden;touch-action:none}
+@keyframes blockingSpin{to{transform:rotate(360deg)}}
+
+@media(min-width:720px){
+  .shell{padding:20px 20px 96px}
+  .kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .form-grid.two{grid-template-columns:1fr 1fr}
+  .grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .modal{align-items:center;justify-content:center;padding:24px}
+  .modal-card{
+    width:min(100%,700px);border-radius:var(--r-xl);padding:20px;
+    border:1px solid rgba(255,255,255,.55)
+  }
+  .modal.open .modal-card{animation:modalIn var(--t) var(--ease) both}
+  @keyframes modalIn{from{opacity:.7;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+  .drawer-card{max-width:460px;margin-right:auto;border-radius:22px 22px 0 0}
+  .toast{left:24px;right:auto;min-width:320px;max-width:440px}
+}
+
+@media(min-width:980px){
+  .side{
+    display:flex;flex-direction:column;position:fixed;right:0;top:0;bottom:0;width:258px;
+    background:var(--surface);border-left:1px solid var(--line);z-index:60;padding:18px 12px;overflow:auto
+  }
+  .side-brand{display:flex;align-items:center;gap:10px;margin:0 4px 18px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+  .side-menu{display:grid;gap:4px}
+  .side-menu button{
+    min-height:44px;border:0;background:transparent;text-align:right;padding:10px 12px;
+    border-radius:12px;color:var(--text-soft);font-weight:800;
+    transition:background var(--t-fast) var(--ease),color var(--t-fast) var(--ease),transform var(--t-fast) var(--ease)
+  }
+  .side-menu button:hover{background:var(--surface-muted);color:var(--navy-900)}
+  .side-menu button:active{transform:translateX(-1px)}
+  .side-menu button.active{background:#edf4f8;color:var(--navy-900);box-shadow:inset -3px 0 var(--teal-600)}
+  .topbar{padding-right:278px;padding-left:22px}
+  .shell{max-width:none;margin:0;padding:24px 282px 36px 24px}
+  .bottom-nav{display:none}
+  .hero{padding:26px 24px}
+  .hero h1{font-size:32px}
+  .section-head{margin-top:28px}
+}
+
+@media(min-width:1320px){
+  .shell{padding-left:40px;padding-right:298px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{
+    animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important;scroll-behavior:auto!important
+  }
+  .btn:hover{transform:none}
+}
+
+@media(hover:none){
+  .card:hover,.row:hover,.btn:hover,.user-chip:hover,.tab:hover,.menu-item:hover,.side-menu button:hover{
+    transform:none;box-shadow:inherit
+  }
+}
+
+.preview-ribbon{
+  position:fixed;top:72px;left:14px;z-index:85;
+  background:#fff8e8;color:#755617;border:1px solid #ead8a5;
+  border-radius:999px;padding:7px 11px;font-size:11px;font-weight:800;
+  box-shadow:var(--shadow-sm);pointer-events:none
+}
+@media(min-width:980px){.preview-ribbon{top:16px;left:22px}}
+</style>
+</head>
+<body>
+<div class="preview-ribbon">معاينة التصميم — وضع قراءة آمن</div>
+<section id="setupView" class="center-page hidden">
+  <div class="auth-card">
+    <div class="logo">خ</div>
+    <div class="eyebrow">مبادرة</div>
+    <h1>نحو خطة تربوية فردية رقمية تفاعلية</h1>
+    <p class="muted small">أول تشغيل: أنشئ حساب مدير النظام. سيتم حفظ الحساب أونلاين ويمكن تسجيل الدخول من أي جهاز.</p>
+    <div class="note warn">هذه الصفحة متصلة الآن بالتخزين والحسابات أونلاين. أنشئ مدير النظام مرة واحدة فقط.</div>
+    <div class="form-grid" style="margin-top:14px">
+      <div class="field"><label>اسم مدير النظام</label><input id="setupName" autocomplete="name"></div>
+      <div class="field"><label>البريد الإلكتروني</label><input id="setupEmail" type="email" autocomplete="email"></div>
+      <div class="field"><label>كلمة المرور</label><input id="setupPassword" type="password" minlength="12"></div>
+      <button class="btn primary" onclick="createFirstAdmin()">إنشاء حساب مدير النظام</button>
+    </div>
+  </div>
+</section>
+<section id="loginView" class="center-page hidden">
+  <div class="auth-card">
+    <div class="logo">خ</div>
+    <div class="eyebrow">مبادرة</div>
+    <h1>نحو خطة تربوية فردية رقمية تفاعلية</h1>
+    <p class="muted small">تسجيل الدخول بالحسابات التي ينشئها مدير النظام.</p>
+    <div class="form-grid">
+      <div class="field"><label>البريد الإلكتروني</label><input id="loginEmail" type="email"></div>
+      <div class="field"><label>كلمة المرور</label><input id="loginPassword" type="password"></div>
+      <button class="btn primary" onclick="login()">تسجيل الدخول</button>
+    </div>
+    <div class="actions">
+      <button class="btn light sm" onclick="showResetLocal()">نسيت كلمة المرور</button>
+    </div>
+  </div>
+</section>
+<div id="appView" class="app hidden">
+  <aside class="side">
+    <div class="side-brand">
+      <div class="brand-mini">خ</div>
+      <div><small class="eyebrow">مبادرة</small><strong>الخطة التربوية الرقمية</strong></div>
+    </div>
+    <div id="sideMenu" class="side-menu"></div>
+  </aside>
+  <header class="topbar">
+    <div class="brand-mini">خ</div>
+    <div class="brand-copy">
+      <small>مبادرة</small>
+      <strong>نحو خطة تربوية فردية رقمية تفاعلية</strong>
+    </div>
+    <button class="user-chip" onclick="openDrawer()"><span id="currentRoleText">الحساب</span> ☰</button>
+  </header>
+  <main class="shell">
+    <section id="dashboard" class="screen active">
+      <div class="hero">
+        <div class="eyebrow" id="welcomeRole">لوحة المستخدم</div>
+        <h1 id="welcomeTitle">مرحبًا</h1>
+        <p id="welcomeText">تظهر لك الأقسام المسموح بها حسب دورك وصلاحياتك.</p>
+      </div>
+      <div class="grid kpis">
+        <div class="card kpi"><div class="muted small">الحسابات</div><div class="num" id="kpiUsers">0</div><div class="small muted">المحفوظة أونلاين</div></div>
+        <div class="card kpi"><div class="muted small">الطلاب</div><div class="num">0</div><div class="small muted">سيتم تطويرها لاحقًا</div></div>
+        <div class="card kpi"><div class="muted small">الخطط</div><div class="num">0</div><div class="small muted">سيتم تطويرها لاحقًا</div></div>
+        <div class="card kpi"><div class="muted small">التقييم</div><div class="num">0</div><div class="small muted">سيتم تطويره لاحقًا</div></div>
+      </div>
+      <div class="section-head"><div><h2>الأقسام المتاحة لك</h2><p>حسب الدور والصلاحيات الفعلية المحفوظة للحساب</p></div></div>
+      <div id="allowedCards" class="grid two"></div>
+    </section>
+    <section id="accounts" class="screen">
+      <div id="accountsAllowed">
+        <div class="section-head">
+          <div><h2>إدارة الحسابات</h2><p>ينشئ مدير النظام الحسابات ويحدد الدور والصلاحيات</p></div>
+          <button class="btn primary" onclick="openAccountModal()">＋ حساب جديد</button>
+        </div>
+        <div class="tabs">
+          <button class="tab active" onclick="setAccountFilter('all',this)">الكل</button>
+          <button class="tab" onclick="setAccountFilter('active',this)">النشطة</button>
+          <button class="tab" onclick="setAccountFilter('inactive',this)">المعطلة</button>
+        </div>
+        <div id="accountList"></div>
+      </div>
+      <div id="accountsDenied" class="permission-denied hidden">ليس لديك صلاحية إدارة الحسابات.</div>
+    </section>
+    <section id="students" class="screen">
+      <div class="section-head"><div><h2>الطلاب والإسناد</h2><p>هذا القسم محجوز للمرحلة التالية من التطوير</p></div></div>
+      <div class="empty"><div class="big">🎓</div><strong>لا يوجد طلاب حاليًا</strong><p>سنكمل بناء هذا القسم معك لاحقًا داخل نفس ملف HTML.</p></div>
+    </section>
+    <section id="assessment" class="screen">
+      <div class="section-head"><div><h2>تحديد المستوى</h2><p>هذا القسم محجوز للمرحلة التالية من التطوير</p></div></div>
+      <div class="empty"><div class="big">◎</div><strong>لم يُبنَ بعد</strong><p>سيتم ربط المنهج والمهارات والوكيل لاحقًا داخل نفس الصفحة.</p></div>
+    </section>
+    <section id="plans" class="screen">
+      <div class="section-head"><div><h2>الخطة التربوية الفردية</h2><p>هذا القسم محجوز للمرحلة التالية من التطوير</p></div></div>
+      <div class="empty"><div class="big">📘</div><strong>لم تُنشأ خطط بعد</strong><p>سنكمل الأقسام الخمسة للخطة لاحقًا.</p></div>
+    </section>
+    <section id="guardians" class="screen">
+      <div class="section-head"><div><h2>أولياء الأمور</h2><p>الربط بالطالب سيُبنى في المرحلة التالية</p></div></div>
+      <div class="empty"><div class="big">👪</div><strong>لا توجد روابط</strong><p>سيتم بناء Student Code ومسار الاعتماد لاحقًا.</p></div>
+    </section>
+    <section id="agent" class="screen">
+      <div class="section-head"><div><h2>الوكيل التعليمي</h2><p>واجهة مكانية فقط حاليًا</p></div></div>
+      <div class="empty"><div class="big">✦</div><strong>الوكيل غير مفعّل</strong><p>لن يتم ربط أي نموذج أو API في هذه المرحلة.</p></div>
+    </section>
+    <section id="reports" class="screen">
+      <div class="section-head"><div><h2>التقارير والطباعة</h2><p>سيتم تطويرها لاحقًا</p></div></div>
+      <div class="empty"><div class="big">▤</div><strong>لا توجد تقارير بعد</strong><p>ستُبنى من بيانات النظام لاحقًا.</p></div>
+    </section>
+    <section id="settings" class="screen">
+      <div class="section-head"><div><h2>الإعدادات</h2><p>إعدادات النظام</p></div></div>
+      <div class="grid two">
+        <div class="card">
+          <h3>بيانات عامة</h3>
+          <div class="form-grid">
+            <div class="field"><label>اسم المبادرة</label><input id="initiativeName" value="نحو خطة تربوية فردية رقمية تفاعلية" oninput="saveSettings()"></div>
+            <div class="field"><label>اسم الجهة</label><input id="organizationName" placeholder="مثال: ثانوية عمر بن الخطاب" oninput="saveSettings()"></div>
+          </div>
+          <div class="note" style="margin-top:12px">يتم الحفظ أونلاين ويظهر على جميع الأجهزة.</div>
+        </div>
+        <div class="card">
+          <h3>بيانات الصفحة المحلية</h3>
+          <div class="list">
+            <div class="row"><div class="ico">💾</div><div class="grow"><strong>حفظ مركزي</strong><small>Supabase</small></div><span class="tag ok">مفعّل</span></div>
+            <div class="row"><div class="ico">🔒</div><div class="grow"><strong>متصل أونلاين</strong><small>الحسابات والإعدادات مشتركة بين الأجهزة</small></div><span class="tag">HTML</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <nav id="bottomNav" class="bottom-nav"></nav>
+</div>
+<div id="drawer" class="drawer" onclick="if(event.target===this)closeDrawer()">
+  <div class="drawer-card">
+    <div class="handle"></div>
+    <h3 id="drawerUserName">الحساب</h3>
+    <p id="drawerUserRole" class="muted small"></p>
+    <div class="menu-grid">
+      <button class="menu-item" onclick="goTo('dashboard');closeDrawer()">⌂ الرئيسية<small>اللوحة الرئيسية</small></button>
+      <button class="menu-item" onclick="goTo('settings');closeDrawer()">⚙ الإعدادات<small>إعدادات الصفحة</small></button>
+      <button class="menu-item" onclick="logout()">↪ تسجيل الخروج<small>إنهاء الجلسة</small></button>
+    </div>
+  </div>
+</div>
+<div id="accountModal" class="modal" onclick="if(event.target===this)closeAccountModal()">
+  <div class="modal-card">
+    <div class="handle"></div>
+    <h3 id="accountModalTitle">إنشاء حساب</h3>
+    <input type="hidden" id="editAccountId">
+    <div class="form-grid two">
+      <div class="field"><label>الاسم</label><input id="accName"></div>
+      <div class="field"><label>البريد الإلكتروني</label><input id="accEmail" type="email"></div>
+      <div class="field"><label>الدور</label>
+        <select id="accRole" onchange="loadRolePermissions()">
+          <option value="school_manager">مدير المدرسة</option>
+          <option value="lead_teacher">المعلم المشرف</option>
+          <option value="teacher">المعلم</option>
+          <option value="supervisor">المشرف التربوي</option>
+          <option value="guardian">ولي الأمر</option>
+          <option value="student">الطالب</option>
+        </select>
+      </div>
+      <div class="field"><label>الحالة</label>
+        <select id="accStatus"><option value="active">نشط</option><option value="inactive">معطل</option></select>
+      </div>
+      <div class="field"><label>كلمة المرور</label><input id="accPassword" type="password" placeholder="12 حرفًا على الأقل، واتركها فارغة عند التعديل للحفاظ على الحالية"></div>
+    </div>
+    <div class="section-head"><div><h2 style="font-size:15px">الصلاحيات</h2><p>يمكن تعديلها لكل حساب بشكل مستقل</p></div></div>
+    <div id="permissionEditor" class="permission-grid"></div>
+    <div class="actions">
+      <button class="btn primary" onclick="saveAccount()">حفظ الحساب</button>
+      <button class="btn outline" onclick="closeAccountModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+<div id="resetModal" class="modal" onclick="if(event.target===this)closeResetLocal()">
+  <div class="modal-card">
+    <div class="handle"></div>
+    <h3>استعادة كلمة المرور</h3>
+    <p class="muted small">في هذه المرحلة يغيّر مدير النظام كلمة مرور الحساب من شاشة إدارة الحسابات.</p>
+    <button class="btn primary" onclick="closeResetLocal()">حسنًا</button>
+  </div>
+</div>
+<div id="blockingOverlay" class="blocking-overlay hidden" aria-hidden="true">
+  <div class="blocking-box" role="status" aria-live="polite">
+    <div class="blocking-spinner"></div>
+    <h3 id="blockingTitle">جاري التنفيذ</h3>
+    <p id="blockingMessage">يرجى الانتظار...</p>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://ejdremrmsrvlojjznlzm.supabase.co';
+const SUPABASE_KEY='sb_publishable_S7w0s75pC2lCo6aZz3ZS_w_1PzjTWtv';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const roleLabels={
+  system_admin:'مدير النظام',
+  school_manager:'مدير المدرسة',
+  lead_teacher:'المعلم المشرف',
+  teacher:'المعلم',
+  supervisor:'المشرف التربوي',
+  guardian:'ولي الأمر',
+  student:'الطالب',
+  pending:'قيد التهيئة'
+};
+const permissionLabels={
+  dashboard:'الصفحة الرئيسية',
+  manage_accounts:'إدارة الحسابات',
+  students:'الطلاب والإسناد',
+  assessment:'تحديد المستوى',
+  plans:'الخطة التربوية',
+  guardians:'أولياء الأمور',
+  agent:'الوكيل التعليمي',
+  reports:'التقارير والطباعة',
+  settings:'الإعدادات'
+};
+const roleDefaults={
+  school_manager:['dashboard','students','plans','guardians','reports'],
+  lead_teacher:['dashboard','students','assessment','plans','guardians','reports'],
+  teacher:['dashboard','students','assessment','plans','agent','reports'],
+  supervisor:['dashboard','students','assessment','plans','reports'],
+  guardian:['dashboard','plans','guardians'],
+  student:['dashboard','agent']
+};
+
+let currentUser=null;
+let usersCache=[];
+let accountFilter='all';
+let settingsTimer=null;
+
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.classList.add('show');
+  clearTimeout(window.__t);
+  window.__t=setTimeout(function(){el.classList.remove('show')},3000);
+}
+function showOnly(id){
+  ['setupView','loginView','appView'].forEach(function(x){document.getElementById(x).classList.add('hidden')});
+  document.getElementById(id).classList.remove('hidden');
+}
+
+let blockingDepth=0;
+function showBlocking(title,message){
+  blockingDepth++;
+  document.getElementById('blockingTitle').textContent=title||'جاري التنفيذ';
+  document.getElementById('blockingMessage').textContent=message||'يرجى الانتظار...';
+  const overlay=document.getElementById('blockingOverlay');
+  overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden','false');
+  document.body.classList.add('is-blocked');
+}
+function hideBlocking(force){
+  blockingDepth=force?0:Math.max(0,blockingDepth-1);
+  if(blockingDepth>0)return;
+  const overlay=document.getElementById('blockingOverlay');
+  overlay.classList.add('hidden');
+  overlay.setAttribute('aria-hidden','true');
+  document.body.classList.remove('is-blocked');
+}
+async function getFunctionError(res,fallback){
+  if(res && res.data && res.data.error) return String(res.data.error);
+  if(res && res.error){
+    try{
+      const ctx=res.error.context;
+      if(ctx && typeof ctx.clone==='function'){
+        const body=await ctx.clone().json();
+        if(body && body.error) return String(body.error);
+      }
+    }catch(_){}
+    if(res.error.message && res.error.message!=='Edge Function returned a non-2xx status code') return res.error.message;
+  }
+  return fallback;
+}
+async function init(){
+  try{
+    const boot=await sb.rpc('bootstrap_status');
+    if(boot.error) throw boot.error;
+    if(!boot.data || !boot.data.admin_exists){
+      showOnly('setupView');
+      return;
+    }
+    const sessionRes=await sb.auth.getSession();
+    const session=sessionRes.data && sessionRes.data.session;
+    if(session) await loadCurrentUser();
+    else showOnly('loginView');
+  }catch(e){
+    showOnly('loginView');
+    toast('تعذر الاتصال بالخدمة الآن');
+  }
+}
+async function createFirstAdmin(){
+  const name=setupName.value.trim();
+  const email=setupEmail.value.trim().toLowerCase();
+  const pass=setupPassword.value;
+  if(!name || !email || pass.length<12){toast('أدخل الاسم والبريد وكلمة مرور من 12 حرفًا على الأقل');return}
+  showBlocking('جاري إنشاء مدير النظام','يتم تجهيز الحساب وحفظه أونلاين...');
+  try{
+    const res=await sb.functions.invoke('bootstrap-admin',{body:{name:name,email:email,password:pass}});
+    if(res.error || (res.data && res.data.error)){toast(await getFunctionError(res,'تعذر إنشاء حساب مدير النظام'));return}
+    setupPassword.value='';
+    loginEmail.value=email;
+    loginPassword.value=pass;
+    await login(true);
+  }catch(e){
+    toast(e && e.message ? e.message : 'حدث خطأ أثناء إنشاء حساب مدير النظام');
+  }finally{hideBlocking()}
+}
+
+async function login(alreadyBlocking){
+  const email=loginEmail.value.trim().toLowerCase();
+  const pass=loginPassword.value;
+  if(!email || !pass){toast('أدخل البريد وكلمة المرور');return}
+  if(!alreadyBlocking) showBlocking('جاري تسجيل الدخول','يتم التحقق من بيانات الحساب...');
+  try{
+    const res=await sb.auth.signInWithPassword({email:email,password:pass});
+    if(res.error){toast('بيانات الدخول غير صحيحة');return}
+    await loadCurrentUser();
+  }catch(e){
+    toast(e && e.message ? e.message : 'تعذر تسجيل الدخول');
+  }finally{
+    if(!alreadyBlocking) hideBlocking();
+  }
+}
+
+async function loadCurrentUser(){
+  const userRes=await sb.auth.getUser();
+  const authUser=userRes.data && userRes.data.user;
+  if(!authUser){showOnly('loginView');return}
+  const profileRes=await sb.from('profiles').select('*').eq('id',authUser.id).single();
+  if(profileRes.error || !profileRes.data){
+    await sb.auth.signOut();
+    showOnly('loginView');
+    toast('تعذر تحميل الحساب');
+    return;
+  }
+  if(profileRes.data.status!=='active' || profileRes.data.role==='pending'){
+    await sb.auth.signOut();
+    showOnly('loginView');
+    toast('الحساب غير نشط');
+    return;
+  }
+  currentUser=Object.assign({},profileRes.data,{name:profileRes.data.full_name});
+  await startApp();
+}
+async function logout(){
+  await sb.auth.signOut();
+  currentUser=null;
+  closeDrawer();
+  showOnly('loginView');
+  loginPassword.value='';
+}
+async function startApp(){
+  if(!currentUser){showOnly('loginView');return}
+  showOnly('appView');
+  document.getElementById('currentRoleText').textContent=roleLabels[currentUser.role]||currentUser.role;
+  document.getElementById('drawerUserName').textContent=currentUser.name;
+  document.getElementById('drawerUserRole').textContent=(roleLabels[currentUser.role]||currentUser.role)+' · '+currentUser.email;
+  document.getElementById('welcomeRole').textContent=roleLabels[currentUser.role]||currentUser.role;
+  document.getElementById('welcomeTitle').textContent='مرحبًا، '+currentUser.name;
+  document.getElementById('welcomeText').textContent='تظهر لك الأقسام المسموح بها حسب الدور والصلاحيات المحفوظة في الحساب.';
+  renderNavigation();
+  renderAllowedCards();
+  await loadSettings();
+  if(can('manage_accounts')) await loadAccounts();
+  else updateKPIs();
+  goTo('dashboard');
+}
+function can(key){return Array.isArray(currentUser && currentUser.permissions) && currentUser.permissions.indexOf(key)!==-1}
+const menuItems=[
+  ['dashboard','⌂','الرئيسية'],
+  ['accounts','👥','الحسابات','manage_accounts'],
+  ['students','🎓','الطلاب','students'],
+  ['assessment','◎','تحديد المستوى','assessment'],
+  ['plans','📘','الخطة','plans'],
+  ['guardians','👪','أولياء الأمور','guardians'],
+  ['agent','✦','الوكيل','agent'],
+  ['reports','▤','التقارير','reports'],
+  ['settings','⚙','الإعدادات','settings']
+];
+function allowed(item){return can(item[3]||item[0])}
+function renderNavigation(){
+  const allowedItems=menuItems.filter(allowed);
+  sideMenu.innerHTML=allowedItems.map(function(x){
+    return '<button data-go="'+x[0]+'">'+x[1]+' '+x[2]+'</button>';
+  }).join('');
+  sideMenu.querySelectorAll('button').forEach(function(b){b.onclick=function(){goTo(b.dataset.go)}});
+  const firstFour=allowedItems.slice(0,4);
+  let nav=firstFour.map(function(x){
+    return '<button class="nav-btn" data-go="'+x[0]+'"><span>'+x[1]+'</span>'+x[2]+'</button>';
+  }).join('');
+  nav+='<button class="nav-btn" onclick="openDrawer()"><span>☰</span>المزيد</button>';
+  bottomNav.innerHTML=nav;
+  bottomNav.querySelectorAll('[data-go]').forEach(function(b){b.onclick=function(){goTo(b.dataset.go)}});
+}
+async function goTo(id){
+  const item=menuItems.find(function(x){return x[0]===id});
+  if(item && !allowed(item)){toast('ليس لديك صلاحية لهذا القسم');return}
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
+  const target=document.getElementById(id);
+  if(target) target.classList.add('active');
+  document.querySelectorAll('[data-go]').forEach(function(b){b.classList.toggle('active',b.dataset.go===id)});
+  if(id==='accounts' && can('manage_accounts')) await loadAccounts();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function renderAllowedCards(){
+  const cards=menuItems.filter(function(x){return x[0]!=='dashboard'&&allowed(x)}).map(function(x){
+    return '<div class="row"><div class="ico">'+x[1]+'</div><div class="grow"><strong>'+x[2]+'</strong><small>'+(permissionLabels[x[3]||x[0]]||x[2])+'</small></div><button class="btn light sm" onclick="goTo(\''+x[0]+'\')">فتح</button></div>';
+  });
+  allowedCards.innerHTML=cards.length?cards.join(''):'<div class="empty"><strong>لا توجد أقسام إضافية</strong></div>';
+}
+async function loadAccounts(){
+  if(!can('manage_accounts')) return;
+  const res=await sb.from('profiles').select('*').order('created_at',{ascending:true});
+  if(res.error){toast('تعذر تحميل الحسابات');return}
+  usersCache=res.data||[];
+  renderAccounts();
+  updateKPIs();
+}
+function updateKPIs(){
+  kpiUsers.textContent=can('manage_accounts')?usersCache.length:'—';
+}
+function openDrawer(){drawer.classList.add('open')}
+function closeDrawer(){drawer.classList.remove('open')}
+function showResetLocal(){resetModal.classList.add('open')}
+function closeResetLocal(){resetModal.classList.remove('open')}
+
+function openAccountModal(id){
+  if(!can('manage_accounts')){toast('ليس لديك صلاحية إدارة الحسابات');return}
+  id=id||'';
+  const u=usersCache.find(function(x){return x.id===id});
+  if(u && u.role==='system_admin'){toast('حساب مدير النظام محمي من هذه الشاشة');return}
+  editAccountId.value=id;
+  accountModalTitle.textContent=id?'تعديل الحساب':'إنشاء حساب';
+  if(u){
+    accName.value=u.full_name;
+    accEmail.value=u.email;
+    accRole.value=u.role;
+    accStatus.value=u.status;
+    accPassword.value='';
+    loadRolePermissions(u.permissions||[]);
+  }else{
+    accName.value='';
+    accEmail.value='';
+    accRole.value='teacher';
+    accStatus.value='active';
+    accPassword.value='';
+    loadRolePermissions();
+  }
+  accountModal.classList.add('open');
+}
+function closeAccountModal(){accountModal.classList.remove('open')}
+function loadRolePermissions(existing){
+  const role=accRole.value;
+  const selected=existing || roleDefaults[role] || [];
+  permissionEditor.innerHTML=Object.entries(permissionLabels)
+    .filter(function(entry){return entry[0]!=='manage_accounts'})
+    .map(function(entry){
+      const k=entry[0],label=entry[1];
+      return '<div class="perm"><input type="checkbox" id="p_'+k+'" data-perm="'+k+'" '+(selected.indexOf(k)!==-1?'checked':'')+'><label for="p_'+k+'">'+label+'</label></div>';
+    }).join('');
+}
+async function saveAccount(){
+  if(!can('manage_accounts')) return;
+  const id=editAccountId.value;
+  const name=accName.value.trim();
+  const email=accEmail.value.trim().toLowerCase();
+  const role=accRole.value;
+  const status=accStatus.value;
+  const password=accPassword.value;
+  if(!name || !email){toast('أدخل الاسم والبريد');return}
+  if(!id && password.length<12){toast('كلمة المرور يجب ألا تقل عن 12 حرفًا');return}
+  if(id && password && password.length<12){toast('كلمة المرور الجديدة يجب ألا تقل عن 12 حرفًا');return}
+  const permissions=Array.from(permissionEditor.querySelectorAll('input[data-perm]:checked')).map(function(x){return x.dataset.perm});
+  const fn=id?'admin-update-user':'admin-create-user';
+  const body={name:name,email:email,role:role,status:status,permissions:permissions,password:password};
+  if(id) body.id=id;
+  showBlocking(id?'جاري تحديث الحساب':'جاري إنشاء الحساب',id?'يتم حفظ التعديلات والصلاحيات...':'يتم إنشاء الحساب وحفظ الصلاحيات أونلاين...');
+  try{
+    const res=await sb.functions.invoke(fn,{body:body});
+    if(res.error || (res.data && res.data.error)){
+      toast(await getFunctionError(res,'تعذر حفظ الحساب'));
+      return;
+    }
+    closeAccountModal();
+    await loadAccounts();
+    toast(id?'تم تحديث الحساب بنجاح':'تم إنشاء الحساب بنجاح');
+  }catch(e){
+    toast(e && e.message ? e.message : 'حدث خطأ غير متوقع أثناء حفظ الحساب');
+  }finally{
+    hideBlocking();
+  }
+}
+function renderAccounts(){
+  let users=usersCache.slice();
+  if(accountFilter==='active') users=users.filter(function(x){return x.status==='active'});
+  if(accountFilter==='inactive') users=users.filter(function(x){return x.status==='inactive'});
+  if(!users.length){
+    accountList.innerHTML='<div class="empty"><div class="big">👥</div><strong>لا توجد حسابات</strong><p>أنشئ حسابًا من زر «حساب جديد».</p></div>';
+    return;
+  }
+  accountList.innerHTML='<div class="table-card"><table><thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>الحالة</th><th>الصلاحيات</th><th>الإجراءات</th></tr></thead><tbody>'+
+    users.map(function(u){
+      const role=roleLabels[u.role]||u.role;
+      const status='<span class="tag '+(u.status==='active'?'ok':'off')+'">'+(u.status==='active'?'نشط':'معطل')+'</span>';
+      let actions='—';
+      if(u.role!=='system_admin'){
+        actions='<div class="inline"><button class="btn outline sm" onclick="openAccountModal(\''+u.id+'\')">تعديل</button><button class="btn '+(u.status==='active'?'danger':'teal')+' sm" onclick="toggleAccount(\''+u.id+'\')">'+(u.status==='active'?'تعطيل':'تفعيل')+'</button></div>';
+      }
+      return '<tr><td><strong>'+esc(u.full_name)+'</strong></td><td>'+esc(u.email)+'</td><td>'+role+'</td><td>'+status+'</td><td><span class="role-summary">'+((u.permissions||[]).length)+' صلاحيات</span></td><td>'+actions+'</td></tr>';
+    }).join('')+
+    '</tbody></table></div>';
+}
+async function toggleAccount(id){
+  const u=usersCache.find(function(x){return x.id===id});
+  if(!u || u.role==='system_admin') return;
+  const next=u.status==='active'?'inactive':'active';
+  if(!confirm((next==='inactive'?'تعطيل':'تفعيل')+' حساب '+u.full_name+'؟')) return;
+  showBlocking(next==='inactive'?'جاري تعطيل الحساب':'جاري تفعيل الحساب','يتم تحديث حالة الحساب...');
+  try{
+    const res=await sb.functions.invoke('admin-update-user',{body:{
+      id:u.id,name:u.full_name,email:u.email,role:u.role,status:next,permissions:u.permissions||[],password:''
+    }});
+    if(res.error || (res.data && res.data.error)){
+      toast(await getFunctionError(res,'تعذر تحديث الحساب'));
+      return;
+    }
+    await loadAccounts();
+    toast(next==='inactive'?'تم تعطيل الحساب':'تم تفعيل الحساب');
+  }catch(e){
+    toast(e && e.message ? e.message : 'حدث خطأ أثناء تحديث الحساب');
+  }finally{
+    hideBlocking();
+  }
+}
+function setAccountFilter(f,el){
+  accountFilter=f;
+  document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active')});
+  el.classList.add('active');
+  renderAccounts();
+}
+async function loadSettings(){
+  const res=await sb.from('app_settings').select('*').eq('id','main').single();
+  if(res.error) return;
+  initiativeName.value=res.data.initiative_name||'نحو خطة تربوية فردية رقمية تفاعلية';
+  organizationName.value=res.data.organization_name||'';
+  const editable=currentUser && currentUser.role==='system_admin';
+  initiativeName.disabled=!editable;
+  organizationName.disabled=!editable;
+}
+function saveSettings(){
+  if(!currentUser || currentUser.role!=='system_admin') return;
+  clearTimeout(settingsTimer);
+  settingsTimer=setTimeout(async function(){
+    const res=await sb.from('app_settings').update({
+      initiative_name:initiativeName.value,
+      organization_name:organizationName.value,
+      updated_at:new Date().toISOString(),
+      updated_by:currentUser.id
+    }).eq('id','main');
+    if(res.error) toast('تعذر حفظ الإعدادات');
+    else toast('تم الحفظ أونلاين');
+  },500);
+}
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,function(m){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m];
+  });
+}
+sb.auth.onAuthStateChange(function(event,session){
+  if(event==='SIGNED_OUT'){
+    currentUser=null;
+    showOnly('loginView');
+  }
+});
+window.addEventListener('load',init);
+</script>
+
+<script>
+window.addEventListener('load', function(){
+  const previewNotice = function(){ toast('وضع المعاينة: لا يتم تنفيذ أي تعديل على البيانات'); };
+  window.saveAccount = async function(){ previewNotice(); };
+  window.toggleAccount = async function(){ previewNotice(); };
+  window.saveSettings = function(){ previewNotice(); };
+  window.createFirstAdmin = async function(){ previewNotice(); };
+});
+</script>
+</body>
+</html>
