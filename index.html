@@ -1004,6 +1004,9 @@ async function goTo(id){
   if(target) target.classList.add('active');
   document.querySelectorAll('[data-go]').forEach(function(b){b.classList.toggle('active',b.dataset.go===id)});
   if(id==='accounts' && can('manage_accounts')) await loadAccounts();
+  if(['students','plans','guardians','reports'].includes(id)) await loadCoreData();
+  if(id==='assessment') await loadAssessmentSkills();
+  if(id==='reports') await renderReportSummary();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function renderAllowedCards(){
