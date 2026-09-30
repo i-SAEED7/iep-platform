@@ -1696,6 +1696,7 @@ function openAccountModal(id){
   if(u && u.role==='system_admin'){toast('حساب مدير النظام محمي من هذه الشاشة');return}
   editAccountId.value=id;
   accountModalTitle.textContent=id?'تعديل الحساب':'إنشاء حساب';
+  setSelectOptions(accOrganization,organizationsCache.map(function(o){return {value:o.id,label:o.name}}),'اختر الجهة');
   if(u){
     accName.value=u.full_name;
     accEmail.value=u.email;
