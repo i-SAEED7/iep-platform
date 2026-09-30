@@ -690,6 +690,7 @@ body.is-blocked{overflow:hidden;touch-action:none}
       <div class="field"><label>الحالة</label>
         <select id="accStatus"><option value="active">نشط</option><option value="inactive">معطل</option></select>
       </div>
+      <div class="field"><label>الجهة</label><select id="accOrganization"></select></div>
       <div class="field"><label>كلمة المرور</label><input id="accPassword" type="password" placeholder="12 حرفًا على الأقل، واتركها فارغة عند التعديل للحفاظ على الحالية"></div>
     </div>
     <div class="section-head"><div><h2 style="font-size:15px">الصلاحيات</h2><p>يمكن تعديلها لكل حساب بشكل مستقل</p></div></div>
@@ -706,6 +707,32 @@ body.is-blocked{overflow:hidden;touch-action:none}
     <h3>استعادة كلمة المرور</h3>
     <p class="muted small">في هذه المرحلة يغيّر مدير النظام كلمة مرور الحساب من شاشة إدارة الحسابات.</p>
     <button class="btn primary" onclick="closeResetLocal()">حسنًا</button>
+  </div>
+</div>
+
+<div id="organizationModal" class="modal" onclick="if(event.target===this)closeOrganizationModal()">
+  <div class="modal-card">
+    <div class="handle"></div>
+    <h3 id="organizationModalTitle">بيانات الجهة</h3>
+    <input id="organizationId" type="hidden">
+    <div class="form-grid two">
+      <div class="field"><label>اسم الجهة</label><input id="orgName"></div>
+      <div class="field"><label>نوع الجهة</label><select id="orgType"><option value="school">مدرسة</option><option value="institute">معهد</option><option value="center">مركز</option></select></div>
+      <div class="field"><label>المرحلة</label><select id="orgStage"><option value="primary">ابتدائي</option><option value="middle">متوسط</option><option value="secondary">ثانوي</option></select></div>
+      <div class="field"><label>الجنس</label><select id="orgGender"><option value="">حدد الجنس</option><option value="boys">بنين</option><option value="girls">بنات</option></select></div>
+    </div>
+    <div class="actions"><button class="btn primary" onclick="saveOrganization()">حفظ الجهة</button><button class="btn outline" onclick="closeOrganizationModal()">إلغاء</button></div>
+  </div>
+</div>
+
+<div id="studentClassModal" class="modal" onclick="if(event.target===this)closeStudentClassModal()">
+  <div class="modal-card">
+    <div class="handle"></div>
+    <h3>إسناد الطالب للفصل</h3>
+    <input id="studentClassStudentId" type="hidden">
+    <div id="studentClassInfo" class="note"></div>
+    <div class="field" style="margin-top:12px"><label>الفصل</label><select id="studentClassSelect"></select></div>
+    <div class="actions"><button class="btn primary" onclick="saveStudentClassEnrollment()">اعتماد</button><button class="btn outline" onclick="closeStudentClassModal()">إلغاء</button></div>
   </div>
 </div>
 
@@ -780,22 +807,36 @@ body.is-blocked{overflow:hidden;touch-action:none}
     <h3 id="iepModalTitle">الخطة التربوية الفردية</h3>
     <input id="iepId" type="hidden">
     <div class="form-grid two">
-      <div class="field"><label>الطالب</label><select id="iepStudent"></select></div>
+      <div class="field"><label>الطالب</label><select id="iepStudent" onchange="syncIepSubjectOptions()"></select></div>
       <div class="field"><label>المادة</label><select id="iepSubject"></select></div>
       <div class="field"><label>العام الدراسي</label><input id="iepYear" placeholder="1448"></div>
       <div class="field"><label>الفصل الدراسي</label><select id="iepSemester"><option>الأول</option><option>الثاني</option><option>الثالث</option></select></div>
     </div>
-    <div class="field" style="margin-top:10px"><label>نقاط القوة</label><textarea id="iepStrengths"></textarea></div>
-    <div class="field" style="margin-top:10px"><label>نقاط الضعف</label><textarea id="iepWeaknesses"></textarea></div>
-    <div class="field" style="margin-top:10px"><label>الهدف طويل المدى</label><textarea id="iepLongGoal"></textarea></div>
-    <div class="field" style="margin-top:10px"><label>الحالة</label>
-      <select id="iepStatus"><option value="draft">مسودة</option><option value="active">نشطة</option><option value="pending_manager_review">بانتظار مراجعة المدير</option><option value="approved">معتمدة</option><option value="completed">مكتملة</option></select>
+
+    <div class="subsection">
+      <div class="card-head"><h3>نقاط القوة</h3><span class="tag">بنود مستقلة</span></div>
+      <div class="inline" style="margin-top:10px"><input id="strengthItemInput" class="search-input" placeholder="اكتب نقطة قوة واحدة"><button class="btn teal" onclick="addObservationItem('strength')">إضافة</button></div>
+      <div id="strengthItemsList" class="list" style="margin-top:10px"></div>
     </div>
+
+    <div class="subsection">
+      <div class="card-head"><h3>نقاط الضعف</h3><span class="tag">بنود مستقلة</span></div>
+      <div class="inline" style="margin-top:10px"><input id="weaknessItemInput" class="search-input" placeholder="اكتب نقطة ضعف واحدة"><button class="btn primary" onclick="addObservationItem('weakness')">إضافة</button></div>
+      <div id="weaknessItemsList" class="list" style="margin-top:10px"></div>
+    </div>
+
+    <div class="field" style="margin-top:14px"><label>الهدف طويل المدى</label><textarea id="iepLongGoal"></textarea></div>
+
+    <div id="iepViewArea" class="subsection hidden">
+      <div class="card-head"><h3>الاطلاع على الخطة</h3></div>
+      <div id="iepViewStatus"></div>
+    </div>
+
     <div id="iepGoalsArea" class="subsection hidden">
       <div class="card-head"><h3>الأهداف قصيرة المدى</h3><button class="btn outline sm" onclick="addGoalPrompt()">＋ هدف</button></div>
       <div id="iepGoalsList"></div>
     </div>
-    <div class="actions"><button class="btn primary" onclick="saveIep()">حفظ الخطة</button><button class="btn outline" onclick="closeIepModal()">إغلاق</button></div>
+    <div class="actions"><button id="saveIepBtn" class="btn primary" onclick="saveIep()">حفظ الخطة</button><button class="btn outline" onclick="closeIepModal()">إغلاق</button></div>
   </div>
 </div>
 
