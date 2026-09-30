@@ -1736,7 +1736,9 @@ async function saveAccount(){
   const role=accRole.value;
   const status=accStatus.value;
   const password=accPassword.value;
+  const organizationId=accOrganization.value;
   if(!name || !email){toast('أدخل الاسم والبريد');return}
+  if(!organizationId){toast('اختر الجهة المرتبط بها الحساب');return}
   if(!id && password.length<12){toast('كلمة المرور يجب ألا تقل عن 12 حرفًا');return}
   if(id && password && password.length<12){toast('كلمة المرور الجديدة يجب ألا تقل عن 12 حرفًا');return}
   const permissions=Array.from(permissionEditor.querySelectorAll('input[data-perm]:checked')).map(function(x){return x.dataset.perm});
@@ -1750,9 +1752,15 @@ async function saveAccount(){
       toast(await getFunctionError(res,'تعذر حفظ الحساب'));
       return;
     }
+    const profileId=id||(res.data&&res.data.id);
+    if(profileId){
+      const orgRes=await sb.rpc('set_profile_primary_organization',{p_profile_id:profileId,p_organization_id:organizationId});
+      if(orgRes.error){toast('تم حفظ الحساب لكن تعذر ربطه بالجهة');return}
+    }
     closeAccountModal();
+    await loadCoreData();
     await loadAccounts();
-    toast(id?'تم تحديث الحساب بنجاح':'تم إنشاء الحساب بنجاح');
+    toast(id?'تم تحديث الحساب بنجاح':'تم إنشاء الحساب وربطه بالجهة');
   }catch(e){
     toast(e && e.message ? e.message : 'حدث خطأ غير متوقع أثناء حفظ الحساب');
   }finally{
