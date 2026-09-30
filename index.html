@@ -1157,6 +1157,12 @@ async function loadCoreData(){
     sb.from('organization_memberships').select('*').eq('active',true)
   ];
   const results=await Promise.all(requests);
+  const requestNames=['الطلاب','المواد','الفصول','إسناد الطلاب','إسناد المعلمين','الخطط','سجل الاطلاع','أولياء الأمور','دليل الحسابات','الجهات','عضويات الجهات'];
+  const failures=results.map(function(r,i){return r.error?requestNames[i]+': '+r.error.message:null}).filter(Boolean);
+  if(failures.length){
+    console.error('Core data load errors',failures);
+    toast('تعذر تحميل بعض بيانات النظام. تم تسجيل التفاصيل للمراجعة.');
+  }
   if(!results[0].error) studentsCache=results[0].data||[];
   if(!results[1].error) subjectsCache=results[1].data||[];
   if(!results[2].error) classesCache=results[2].data||[];
@@ -1210,7 +1216,7 @@ function populateGlobalSelectors(){
   }).map(function(p){return {value:p.id,label:p.full_name}});
   setSelectOptions(document.getElementById('guardianAccount'),orgGuardians,'اختر ولي الأمر');
 
-  const classItems=classesCache.filter(function(x){return !currentOrganization||x.organization_id===currentOrganization.id})
+  const classItems=uniqueClasses(classesCache.filter(function(x){return !currentOrganization||x.organization_id===currentOrganization.id}))
     .map(function(x){return {value:x.id,label:classLabel(x)}});
   setSelectOptions(document.getElementById('classTeacherClassSelect'),classItems,'اختر الفصل');
   setSelectOptions(document.getElementById('studentClassSelect'),classItems,'اختر الفصل');
@@ -1231,6 +1237,15 @@ function classLabel(cls){
   if(!cls)return '—';
   const stageLabel={primary:'ابتدائي',middle:'متوسط',secondary:'ثانوي'}[cls.stage]||cls.stage;
   return stageLabel+' — الصف '+cls.grade_number+(cls.section_label?' — '+cls.section_label:'');
+}
+function uniqueClasses(rows){
+  const seen=new Set();
+  return rows.filter(function(cls){
+    const key=[cls.organization_id,cls.stage,cls.grade_number,(cls.section_label||'').trim().toLowerCase()].join('|');
+    if(seen.has(key))return false;
+    seen.add(key);
+    return true;
+  });
 }
 function currentStudentClass(studentId){
   const e=enrollmentsCache.find(function(x){return x.student_id===studentId&&x.active});
@@ -1570,6 +1585,15 @@ function renderOrganizationSubjects(){
 async function addOrganizationSubject(){
   if(!currentOrganization){toast('لا توجد جهة مرتبطة بالحساب');return}
   const name=orgSubjectInput.value.trim();if(!name){toast('اكتب اسم المادة');return}
+  const duplicateSubject=subjectsCache.find(function(s){
+    return s.organization_id===currentOrganization.id
+      && s.id!==orgSubjectEditId
+      && String(s.name).trim().toLowerCase()===name.toLowerCase();
+  });
+  if(duplicateSubject){
+    toast(duplicateSubject.lifecycle_status==='excluded'?'المادة موجودة لكنها مستبعدة؛ يمكنك إعادة تفعيلها':'المادة موجودة مسبقًا ضمن مواد الجهة');
+    return;
+  }
   showBlocking(orgSubjectEditId?'جاري تعديل المادة':'جاري إضافة المادة','يتم حفظ المادة ضمن الجهة...');
   try{
     let res;
@@ -1631,7 +1655,7 @@ function renderClassesManagement(){
   classOrgInfo.textContent='الجهة: '+currentOrganization.name+' — المرحلة: '+organizationStageLabel(currentOrganization.stage)+' — '+organizationGenderLabel(currentOrganization.gender);
   fillClassGrades();
 
-  const ownClasses=classesCache.filter(function(x){return x.organization_id===currentOrganization.id});
+  const ownClasses=uniqueClasses(classesCache.filter(function(x){return x.organization_id===currentOrganization.id}));
   classesList.innerHTML=ownClasses.length?ownClasses.map(function(cls){
     const count=enrollmentsCache.filter(function(e){return e.class_id===cls.id&&e.active}).length;
     return '<div class="card"><div class="card-head"><div><h3>'+esc(classLabel(cls))+'</h3><div class="meta"><span>'+count+' طالب</span></div></div><span class="tag ok">نشط</span></div></div>';
@@ -1667,9 +1691,21 @@ function renderClassesManagement(){
 async function createClass(){
   if(!currentOrganization){toast('لا توجد جهة مرتبطة بالحساب');return}
   const grade=Number(classGrade.value);if(!grade){toast('اختر الصف الدراسي');return}
+  const section=(classSection.value||'').trim();
+  const duplicate=classesCache.find(function(cls){
+    return cls.organization_id===currentOrganization.id
+      && cls.stage===currentOrganization.stage
+      && Number(cls.grade_number)===grade
+      && String(cls.section_label||'').trim().toLowerCase()===section.toLowerCase()
+      && cls.status==='active';
+  });
+  if(duplicate){
+    toast('هذا الفصل موجود مسبقًا؛ غيّر الفصل/الشعبة أو استخدم الفصل الموجود');
+    return;
+  }
   showBlocking('جاري إنشاء الفصل','يتم حفظ الفصل ضمن الجهة...');
   try{
-    const res=await sb.from('classes').insert({organization_id:currentOrganization.id,stage:currentOrganization.stage,grade_number:grade,section_label:classSection.value.trim()||null,created_by:currentUser.id});
+    const res=await sb.from('classes').insert({organization_id:currentOrganization.id,stage:currentOrganization.stage,grade_number:grade,section_label:section||null,created_by:currentUser.id});
     if(res.error){toast(res.error.message);return}
     classSection.value='';await loadCoreData();toast('تم إنشاء الفصل');
   }finally{hideBlocking()}
@@ -1678,7 +1714,7 @@ function openStudentClassModal(id){
   const s=studentsCache.find(function(x){return x.id===id});if(!s)return;
   studentClassStudentId.value=id;
   studentClassInfo.innerHTML='<strong>'+esc(fullStudentName(s))+'</strong><br><span>'+esc(s.student_code)+'</span>';
-  const ownClasses=classesCache.filter(function(x){return !currentOrganization||x.organization_id===currentOrganization.id}).map(function(x){return {value:x.id,label:classLabel(x)}});
+  const ownClasses=uniqueClasses(classesCache.filter(function(x){return !currentOrganization||x.organization_id===currentOrganization.id})).map(function(x){return {value:x.id,label:classLabel(x)}});
   setSelectOptions(studentClassSelect,ownClasses,'اختر الفصل');
   const current=currentStudentClass(id);if(current)studentClassSelect.value=current.id;
   studentClassModal.classList.add('open');
