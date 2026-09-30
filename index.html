@@ -631,25 +631,29 @@ body.is-blocked{overflow:hidden;touch-action:none}
   <div id="reportSummary" class="card"><p class="muted small">اختر خطة ثم اطبعها.</p></div>
 </section>
 <section id="settings" class="screen">
-      <div class="section-head"><div><h2>الإعدادات</h2><p>إعدادات النظام</p></div></div>
-      <div class="grid two">
-        <div class="card">
-          <h3>بيانات عامة</h3>
-          <div class="form-grid">
-            <div class="field"><label>اسم المبادرة</label><input id="initiativeName" value="نحو خطة تربوية فردية رقمية تفاعلية" oninput="saveSettings()"></div>
-            <div class="field"><label>اسم الجهة</label><input id="organizationName" placeholder="مثال: ثانوية عمر بن الخطاب" oninput="saveSettings()"></div>
-          </div>
-          <div class="note" style="margin-top:12px">يتم الحفظ أونلاين ويظهر على جميع الأجهزة.</div>
-        </div>
-        <div class="card">
-          <h3>بيانات الصفحة المحلية</h3>
-          <div class="list">
-            <div class="row"><div class="ico">💾</div><div class="grow"><strong>حفظ مركزي</strong><small>Supabase</small></div><span class="tag ok">مفعّل</span></div>
-            <div class="row"><div class="ico">🔒</div><div class="grow"><strong>متصل أونلاين</strong><small>الحسابات والإعدادات مشتركة بين الأجهزة</small></div><span class="tag">HTML</span></div>
-          </div>
-        </div>
+  <div class="section-head"><div><h2>الإعدادات</h2><p>بيانات المبادرة والجهات المرتبطة بالنظام</p></div></div>
+
+  <div class="grid two">
+    <div class="card">
+      <h3>بيانات المبادرة</h3>
+      <div class="field"><label>اسم المبادرة</label><input id="initiativeName" value="نحو خطة تربوية فردية رقمية تفاعلية" oninput="saveSettings()"></div>
+      <div class="note" style="margin-top:12px">الهوية الحالية تستخدم التدرج النيلي والبنفسجي والأزرق المعتمد للمبادرة.</div>
+    </div>
+    <div class="card">
+      <h3>الاتصال والحفظ</h3>
+      <div class="list">
+        <div class="row"><div class="ico">💾</div><div class="grow"><strong>حفظ مركزي</strong><small>Supabase</small></div><span class="tag ok">مفعّل</span></div>
+        <div class="row"><div class="ico">🔒</div><div class="grow"><strong>صلاحيات على مستوى البيانات</strong><small>RLS + نطاق الجهة والفصل</small></div><span class="tag">نشط</span></div>
       </div>
-    </section>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <div><h2>الجهات</h2><p>اسم الجهة ونوعها ومرحلتها وجنسها</p></div>
+    <button id="newOrganizationBtn" class="btn primary" onclick="openOrganizationModal()">＋ جهة جديدة</button>
+  </div>
+  <div id="organizationsList" class="data-grid cards-2"></div>
+</section>
   </main>
   <nav id="bottomNav" class="bottom-nav"></nav>
 </div>
