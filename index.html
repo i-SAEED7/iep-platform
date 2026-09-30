@@ -1232,6 +1232,44 @@ function currentStudentClass(studentId){
   const e=enrollmentsCache.find(function(x){return x.student_id===studentId&&x.active});
   return e?classesCache.find(function(c){return c.id===e.class_id}):null;
 }
+function allowedSubjectsForStudent(studentId){
+  if(currentUser?.role==='teacher'){
+    const enrollment=enrollmentsCache.find(function(e){return e.student_id===studentId&&e.active});
+    if(!enrollment)return [];
+    const ids=classSubjectAssignmentsCache
+      .filter(function(a){return a.active&&a.teacher_id===currentUser.id&&a.class_id===enrollment.class_id})
+      .map(function(a){return a.subject_id});
+    return subjectsCache.filter(function(s){return ids.includes(s.id)&&s.lifecycle_status==='active'});
+  }
+  return subjectsCache.filter(function(s){
+    return s.lifecycle_status==='active'&&(!currentOrganization||s.organization_id===currentOrganization.id);
+  });
+}
+function syncAssessmentOptions(){
+  const studentEl=document.getElementById('assessmentStudent');
+  const subjectEl=document.getElementById('assessmentSubject');
+  if(!studentEl||!subjectEl)return;
+  const prevStudent=studentEl.value;
+  const items=studentsCache.map(function(s){return {value:s.id,label:fullStudentName(s)+' — '+s.student_code}});
+  setSelectOptions(studentEl,items,'اختر الطالب');
+  if(prevStudent&&items.some(function(x){return x.value===prevStudent}))studentEl.value=prevStudent;
+  const sid=studentEl.value;
+  const subs=sid?allowedSubjectsForStudent(sid):[];
+  setSelectOptions(subjectEl,subs.map(function(s){return {value:s.id,label:s.name}}),'اختر المادة');
+}
+function syncIepOptions(){
+  const studentEl=document.getElementById('iepStudent');
+  const subjectEl=document.getElementById('iepSubject');
+  if(!studentEl||!subjectEl)return;
+  const prevStudent=studentEl.value,prevSubject=subjectEl.value;
+  const items=studentsCache.map(function(s){return {value:s.id,label:fullStudentName(s)+' — '+s.student_code}});
+  setSelectOptions(studentEl,items,'اختر الطالب');
+  if(prevStudent&&items.some(function(x){return x.value===prevStudent}))studentEl.value=prevStudent;
+  const sid=studentEl.value;
+  const subs=sid?allowedSubjectsForStudent(sid):[];
+  setSelectOptions(subjectEl,subs.map(function(s){return {value:s.id,label:s.name}}),'اختر المادة');
+  if(prevSubject&&subs.some(function(s){return s.id===prevSubject}))subjectEl.value=prevSubject;
+}
 function renderStudents(){
   const host=document.getElementById('studentsList');if(!host)return;
   const q=(document.getElementById('studentSearch')?.value||'').trim().toLowerCase();
