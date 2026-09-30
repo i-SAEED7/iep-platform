@@ -811,11 +811,16 @@ const permissionLabels={
   guardians:'أولياء الأمور',
   agent:'الوكيل التعليمي',
   reports:'التقارير والطباعة',
-  settings:'الإعدادات'
+  settings:'الإعدادات',
+  manage_org_profile:'بيانات الجهة',
+  manage_org_subjects:'المواد التدريسية',
+  manage_classes:'إدارة الفصول',
+  assign_students:'إسناد الطلاب',
+  assign_teachers:'إسناد المعلمين'
 };
 const roleDefaults={
   school_manager:['dashboard','students','plans','guardians','reports'],
-  lead_teacher:['dashboard','students','assessment','plans','guardians','reports'],
+  lead_teacher:['dashboard','students','assessment','plans','guardians','reports','manage_org_subjects','manage_classes','assign_students','assign_teachers'],
   teacher:['dashboard','students','assessment','plans','agent','reports'],
   supervisor:['dashboard','students','assessment','plans','reports'],
   guardian:['dashboard','plans','guardians'],
@@ -834,6 +839,14 @@ let iepsCache=[];
 let guardianLinksCache=[];
 let skillsCache=[];
 let attemptsCache=[];
+let organizationsCache=[];
+let membershipsCache=[];
+let classesCache=[];
+let enrollmentsCache=[];
+let classSubjectAssignmentsCache=[];
+let currentOrganization=null;
+let iepObservationItems=[];
+
 
 function toast(msg){
   const el=document.getElementById('toast');
@@ -974,11 +987,17 @@ async function startApp(){
   else updateKPIs();
   goTo('dashboard');
 }
-function can(key){return Array.isArray(currentUser && currentUser.permissions) && currentUser.permissions.indexOf(key)!==-1}
+function can(key){
+  if(currentUser?.role==='system_admin') return true;
+  if(key==='class_management') return ['manage_classes','assign_students','assign_teachers'].some(function(p){return currentUser?.permissions?.includes(p)});
+  return Array.isArray(currentUser && currentUser.permissions) && currentUser.permissions.indexOf(key)!==-1;
+}
 const menuItems=[
   ['dashboard','⌂','الرئيسية'],
   ['accounts','👥','الحسابات','manage_accounts'],
   ['students','🎓','الطلاب','students'],
+  ['orgSubjects','▤','المواد التدريسية','manage_org_subjects'],
+  ['classManagement','▦','الطلاب والفصول','class_management'],
   ['assessment','◎','تحديد المستوى','assessment'],
   ['plans','📘','الخطة','plans'],
   ['guardians','👪','أولياء الأمور','guardians'],
