@@ -395,6 +395,46 @@ body.is-blocked{overflow:hidden;touch-action:none}
     transform:none;box-shadow:inherit
   }
 }
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0 14px}
+.toolbar .field{flex:1;min-width:180px}
+.data-grid{display:grid;gap:10px}
+.student-card,.plan-card,.skill-card,.link-card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:14px;box-shadow:var(--shadow-sm)
+}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.card-head h3{margin:0;font-size:16px;color:var(--navy-950)}
+.meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.meta span{font-size:11px;color:var(--text-soft);background:var(--surface-muted);border-radius:999px;padding:5px 8px}
+.split{display:grid;gap:12px}
+.field-row{display:grid;gap:10px}
+.compact-select{min-height:38px;border:1px solid var(--line-strong);border-radius:10px;background:#fff;padding:7px 9px}
+.score-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:10px}
+.score-box{background:var(--surface-soft);border:1px solid var(--line);border-radius:10px;padding:7px;text-align:center}
+.score-box label{display:block;font-size:10px;color:var(--muted);margin-bottom:4px}
+.score-box select{width:100%;min-height:34px;border:1px solid var(--line-strong);border-radius:8px;background:#fff}
+.subsection{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.goal-item{display:flex;gap:8px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.goal-item:last-child{border-bottom:0}
+.goal-number{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:#eef5f8;color:var(--navy-900);font-weight:900;flex:0 0 auto}
+.goal-content{flex:1;min-width:0}
+.goal-content strong{display:block}
+.goal-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.stat-line{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:12px;color:var(--text-soft);margin-top:8px}
+.search-input{width:100%;min-height:44px;border:1px solid var(--line-strong);border-radius:var(--r-md);padding:10px 12px;background:#fff}
+.print-sheet{display:none}
+@media(min-width:760px){
+  .data-grid.cards-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .split{grid-template-columns:1.05fr .95fr}
+  .field-row.two{grid-template-columns:1fr 1fr}
+}
+@media print{
+  body>*{display:none!important}
+  #printSheet{display:block!important;position:static!important;background:#fff!important;color:#000!important;padding:12mm!important}
+  #printSheet *{box-shadow:none!important}
+}
+
 </style>
 </head>
 <body>
