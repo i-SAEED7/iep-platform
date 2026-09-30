@@ -648,6 +648,10 @@ body.is-blocked{overflow:hidden;touch-action:none}
     </div>
   </div>
 
+  <div class="card" id="activeOrganizationCard" style="margin-top:12px">
+    <div class="field"><label>الجهة الحالية لإدارة المواد والفصول</label><select id="activeOrganizationSelect" onchange="setActiveOrganization(this.value)"></select></div>
+  </div>
+
   <div class="section-head">
     <div><h2>الجهات</h2><p>اسم الجهة ونوعها ومرحلتها وجنسها</p></div>
     <button id="newOrganizationBtn" class="btn primary" onclick="openOrganizationModal()">＋ جهة جديدة</button>
