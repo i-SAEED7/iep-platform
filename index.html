@@ -1219,23 +1219,34 @@ function populateGlobalSelectors(){
   setSelectOptions(document.getElementById('reportIep'),reportItems,'اختر الخطة');
   if(document.getElementById('reportIep'))document.getElementById('reportIep').onchange=renderReportSummary;
 }
+function classLabel(cls){
+  if(!cls)return '—';
+  const stageLabel={primary:'ابتدائي',middle:'متوسط',secondary:'ثانوي'}[cls.stage]||cls.stage;
+  return stageLabel+' — الصف '+cls.grade_number+(cls.section_label?' — '+cls.section_label:'');
+}
+function currentStudentClass(studentId){
+  const e=enrollmentsCache.find(function(x){return x.student_id===studentId&&x.active});
+  return e?classesCache.find(function(c){return c.id===e.class_id}):null;
+}
 function renderStudents(){
   const host=document.getElementById('studentsList');if(!host)return;
   const q=(document.getElementById('studentSearch')?.value||'').trim().toLowerCase();
-  const rows=studentsCache.filter(function(s){return !q || fullStudentName(s).toLowerCase().includes(q) || String(s.student_code).toLowerCase().includes(q)});
+  const rows=studentsCache.filter(function(s){
+    return !q || fullStudentName(s).toLowerCase().includes(q) || String(s.student_code).toLowerCase().includes(q);
+  });
   document.getElementById('addStudentBtn')?.classList.toggle('hidden',!['system_admin','lead_teacher'].includes(currentUser?.role));
-  document.getElementById('addSubjectBtn')?.classList.toggle('hidden',!['system_admin','lead_teacher'].includes(currentUser?.role));
-  if(!rows.length){host.innerHTML='<div class="empty"><div class="big">🎓</div><strong>لا يوجد طلاب</strong><p>أضف طالبًا أو غيّر البحث.</p></div>';return}
+  if(!rows.length){
+    host.innerHTML='<div class="empty"><div class="big">🎓</div><strong>لا يوجد طلاب</strong><p>لا توجد سجلات متاحة ضمن نطاق حسابك.</p></div>';
+    return;
+  }
   host.innerHTML=rows.map(function(s){
-    const ass=assignmentsCache.filter(function(a){return a.student_id===s.id&&a.active});
-    const assText=ass.map(function(a){return getSubjectName(a.subject_id)+' — '+profileName(a.teacher_id)}).join('، ');
+    const cls=currentStudentClass(s.id);
     const canEdit=['system_admin','lead_teacher','teacher'].includes(currentUser?.role);
-    const canAssign=['system_admin','school_manager','lead_teacher','supervisor'].includes(currentUser?.role);
-    return '<div class="student-card"><div class="card-head"><div><h3>'+esc(fullStudentName(s))+'</h3><div class="meta"><span>'+esc(s.student_code)+'</span><span>'+esc(s.program||'—')+'</span><span>'+esc(s.grade_level||'—')+'</span></div></div><span class="tag '+(s.status==='active'?'ok':'off')+'">'+(s.status==='active'?'نشط':esc(s.status))+'</span></div><div class="stat-line"><span>الإسناد</span><strong>'+esc(assText||'لا يوجد إسناد')+'</strong></div><div class="actions">'+(canEdit?'<button class="btn outline sm" onclick="openStudentModal(\''+s.id+'\')">تعديل</button>':'')+(canAssign?'<button class="btn primary sm" onclick="openAssignmentModal(\''+s.id+'\')">إسناد</button>':'')+'</div></div>';
+    return '<div class="student-card"><div class="card-head"><div><h3>'+esc(fullStudentName(s))+'</h3><div class="meta"><span>'+esc(s.student_code)+'</span><span>'+esc(s.program||'—')+'</span><span>'+(cls?esc(classLabel(cls)):'غير مسند لفصل')+'</span></div></div><span class="tag '+(s.status==='active'?'ok':'off')+'">'+(s.status==='active'?'نشط':esc(s.status))+'</span></div><div class="actions">'+(canEdit?'<button class="btn outline sm" onclick="openStudentModal(\''+s.id+'\')">تعديل البيانات</button>':'')+'</div></div>';
   }).join('');
 }
 function openStudentModal(id){
-  if(!['system_admin','lead_teacher','teacher'].includes(currentUser?.role)){toast('ليس لديك صلاحية تعديل بيانات الطلاب');return}
+  if(!id && !['system_admin','lead_teacher'].includes(currentUser?.role)){toast('ليس لديك صلاحية إنشاء طالب');return}\n  if(id && !['system_admin','lead_teacher','teacher'].includes(currentUser?.role)){toast('ليس لديك صلاحية تعديل بيانات الطالب');return}
   const s=studentsCache.find(function(x){return x.id===id});
   studentId.value=s?s.id:'';studentModalTitle.textContent=s?'تعديل الطالب':'إضافة طالب';
   studentFirstName.value=s?s.first_name:'';studentFatherName.value=s?s.father_name:'';studentFamilyName.value=s?s.family_name:'';
@@ -1244,12 +1255,34 @@ function openStudentModal(id){
 }
 function closeStudentModal(){studentModal.classList.remove('open')}
 async function saveStudent(){
-  const id=studentId.value;const payload={first_name:studentFirstName.value.trim(),father_name:studentFatherName.value.trim(),family_name:studentFamilyName.value.trim(),birth_date:studentBirthDate.value||null,program:studentProgram.value.trim()||'فكري',grade_level:studentGrade.value.trim(),contact_phone:studentPhone.value.trim(),status:studentStatus.value,updated_at:new Date().toISOString()};
+  const id=studentId.value;
+  const payload={
+    first_name:studentFirstName.value.trim(),
+    father_name:studentFatherName.value.trim(),
+    family_name:studentFamilyName.value.trim(),
+    birth_date:studentBirthDate.value||null,
+    program:studentProgram.value.trim()||'فكري',
+    grade_level:studentGrade.value.trim(),
+    contact_phone:studentPhone.value.trim(),
+    status:studentStatus.value,
+    updated_at:new Date().toISOString()
+  };
   if(!payload.first_name||!payload.family_name){toast('أدخل الاسم الأول واسم العائلة');return}
+  if(!id && !currentOrganization){toast('يجب تهيئة جهة للحساب أولًا');return}
   showBlocking(id?'جاري تحديث الطالب':'جاري إضافة الطالب','يتم حفظ بيانات الطالب...');
   try{
-    let res;if(id){res=await sb.from('students').update(payload).eq('id',id)}else{payload.created_by=currentUser.id;res=await sb.from('students').insert(payload)}
-    if(res.error){toast(res.error.message);return}closeStudentModal();await loadCoreData();toast(id?'تم تحديث الطالب':'تم إضافة الطالب');
+    let res;
+    if(id){
+      res=await sb.from('students').update(payload).eq('id',id);
+    }else{
+      payload.created_by=currentUser.id;
+      payload.organization_id=currentOrganization.id;
+      res=await sb.from('students').insert(payload);
+    }
+    if(res.error){toast(res.error.message);return}
+    closeStudentModal();
+    await loadCoreData();
+    toast(id?'تم تحديث الطالب':'تم إضافة الطالب');
   }finally{hideBlocking()}
 }
 function openSubjectModal(){if(!['system_admin','lead_teacher'].includes(currentUser?.role)){toast('ليس لديك صلاحية إضافة مادة');return}subjectName.value='';subjectModal.classList.add('open')}
