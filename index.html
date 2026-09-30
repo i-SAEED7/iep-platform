@@ -564,7 +564,7 @@ body.is-blocked{overflow:hidden;touch-action:none}
         <div class="field"><label>الصف الدراسي</label><select id="classGrade"></select></div>
         <div class="field"><label>الفصل / الشعبة</label><input id="classSection" placeholder="اختياري مثل: أ أو 1"></div>
       </div>
-      <div class="actions"><button class="btn primary" onclick="createClass()">إنشاء الفصل</button></div>
+      <div class="actions"><button id="classSaveBtn" class="btn primary" onclick="createClass()">إنشاء الفصل</button><button id="classCancelBtn" class="btn outline hidden" onclick="cancelClassEdit()">إلغاء</button></div>
     </div>
     <div id="classesList" class="data-grid cards-2" style="margin-top:12px"></div>
   </div>
@@ -948,6 +948,7 @@ let currentOrganization=null;
 let iepObservationItems=[];
 let iepViewsCache=[];
 let orgSubjectEditId=null;
+let classEditId=null;
 
 
 function toast(msg){
@@ -1658,7 +1659,7 @@ function renderClassesManagement(){
   const ownClasses=uniqueClasses(classesCache.filter(function(x){return x.organization_id===currentOrganization.id}));
   classesList.innerHTML=ownClasses.length?ownClasses.map(function(cls){
     const count=enrollmentsCache.filter(function(e){return e.class_id===cls.id&&e.active}).length;
-    return '<div class="card"><div class="card-head"><div><h3>'+esc(classLabel(cls))+'</h3><div class="meta"><span>'+count+' طالب</span></div></div><span class="tag ok">نشط</span></div></div>';
+    return '<div class="card"><div class="card-head"><div><h3>'+esc(classLabel(cls))+'</h3><div class="meta"><span>'+count+' طالب</span></div></div><span class="tag ok">نشط</span></div><div class="actions"><button class="btn outline sm" onclick="editClass(\''+cls.id+'\')">تعديل</button><button class="btn danger sm" onclick="deleteClass(\''+cls.id+'\')">حذف</button></div></div>';
   }).join(''):'<div class="empty"><strong>لا توجد فصول</strong><p>أنشئ الفصل الأول.</p></div>';
 
   studentEnrollmentList.innerHTML=studentsCache.length?studentsCache.map(function(s){
@@ -1694,6 +1695,7 @@ async function createClass(){
   const section=(classSection.value||'').trim();
   const duplicate=classesCache.find(function(cls){
     return cls.organization_id===currentOrganization.id
+      && cls.id!==classEditId
       && cls.stage===currentOrganization.stage
       && Number(cls.grade_number)===grade
       && String(cls.section_label||'').trim().toLowerCase()===section.toLowerCase()
@@ -1703,11 +1705,65 @@ async function createClass(){
     toast('هذا الفصل موجود مسبقًا؛ غيّر الفصل/الشعبة أو استخدم الفصل الموجود');
     return;
   }
-  showBlocking('جاري إنشاء الفصل','يتم حفظ الفصل ضمن الجهة...');
+  showBlocking(classEditId?'جاري تعديل الفصل':'جاري إنشاء الفصل',classEditId?'يتم حفظ تعديلات الفصل...':'يتم حفظ الفصل ضمن الجهة...');
   try{
-    const res=await sb.from('classes').insert({organization_id:currentOrganization.id,stage:currentOrganization.stage,grade_number:grade,section_label:section||null,created_by:currentUser.id});
+    let res;
+    if(classEditId){
+      res=await sb.from('classes').update({
+        grade_number:grade,
+        section_label:section||null,
+        updated_at:new Date().toISOString()
+      }).eq('id',classEditId);
+    }else{
+      res=await sb.from('classes').insert({
+        organization_id:currentOrganization.id,
+        stage:currentOrganization.stage,
+        grade_number:grade,
+        section_label:section||null,
+        created_by:currentUser.id
+      });
+    }
     if(res.error){toast(res.error.message);return}
-    classSection.value='';await loadCoreData();toast('تم إنشاء الفصل');
+    const wasEdit=!!classEditId;
+    cancelClassEdit();
+    await loadCoreData();
+    toast(wasEdit?'تم تعديل الفصل':'تم إنشاء الفصل');
+  }finally{hideBlocking()}
+}
+function editClass(id){
+  if(!can('manage_classes')){toast('ليس لديك صلاحية تعديل الفصول');return}
+  const cls=classesCache.find(function(x){return x.id===id});if(!cls)return;
+  classEditId=id;
+  classGrade.value=String(cls.grade_number);
+  classSection.value=cls.section_label||'';
+  classSaveBtn.textContent='حفظ التعديل';
+  classCancelBtn.classList.remove('hidden');
+  classSection.focus();
+}
+function cancelClassEdit(){
+  classEditId=null;
+  classSection.value='';
+  if(document.getElementById('classSaveBtn'))classSaveBtn.textContent='إنشاء الفصل';
+  document.getElementById('classCancelBtn')?.classList.add('hidden');
+}
+async function deleteClass(id){
+  if(!can('manage_classes')){toast('ليس لديك صلاحية حذف الفصول');return}
+  const cls=classesCache.find(function(x){return x.id===id});if(!cls)return;
+  if(!confirm('حذف '+classLabel(cls)+'؟'))return;
+  showBlocking('جاري حذف الفصل','يتم التحقق من عدم وجود طلاب أو معلمين مرتبطين به...');
+  try{
+    const res=await sb.rpc('delete_class_if_unused',{p_class_id:id});
+    if(res.error){
+      if(String(res.error.message||'').includes('class_in_use')){
+        toast('لا يمكن حذف الفصل لأنه مرتبط بطلاب أو معلمين. ألغِ الإسنادات أولًا.');
+      }else{
+        toast(res.error.message||'تعذر حذف الفصل');
+      }
+      return;
+    }
+    if(classEditId===id)cancelClassEdit();
+    await loadCoreData();
+    toast('تم حذف الفصل');
   }finally{hideBlocking()}
 }
 function openStudentClassModal(id){
