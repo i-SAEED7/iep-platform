@@ -540,7 +540,7 @@ body.is-blocked{overflow:hidden;touch-action:none}
   <div class="card" style="margin-top:12px">
     <div class="field-row two">
       <div class="field"><label>اسم المادة</label><input id="orgSubjectInput" placeholder="اكتب اسم المادة"></div>
-      <div class="actions" style="align-items:end"><button class="btn primary" onclick="addOrganizationSubject()">إضافة المادة</button></div>
+      <div class="actions" style="align-items:end"><button id="orgSubjectSaveBtn" class="btn primary" onclick="addOrganizationSubject()">اعتماد</button><button id="orgSubjectCancelBtn" class="btn outline hidden" onclick="cancelOrganizationSubjectEdit()">إلغاء</button></div>
     </div>
   </div>
   <div id="orgSubjectsList" class="data-grid cards-2" style="margin-top:12px"></div>
@@ -941,7 +941,7 @@ let classesCache=[];
 let enrollmentsCache=[];
 let classSubjectAssignmentsCache=[];
 let currentOrganization=null;
-let iepObservationItems=[];
+let iepObservationItems=[];\nlet orgSubjectEditId=null;
 
 
 function toast(msg){
@@ -1443,6 +1443,229 @@ async function printSelectedIep(){
   const org=document.getElementById('organizationName')?.value||'';
   printSheet.innerHTML='<div style="font-family:Tahoma,Arial,sans-serif;direction:rtl"><div style="text-align:center;border-bottom:2px solid #17324d;padding-bottom:10px;margin-bottom:18px"><div style="font-size:13px">مبادرة</div><h1 style="font-size:22px;margin:4px 0">نحو خطة تربوية فردية رقمية تفاعلية</h1><div>'+esc(org)+'</div></div><table style="width:100%;border-collapse:collapse;margin-bottom:14px"><tr><td><b>الطالب:</b> '+esc(studentName(i.student_id))+'</td><td><b>المادة:</b> '+esc(getSubjectName(i.subject_id))+'</td></tr><tr><td><b>العام:</b> '+esc(i.academic_year)+'</td><td><b>الفصل:</b> '+esc(i.semester)+'</td></tr></table><h3>نقاط القوة</h3><p>'+esc(i.strengths||'—')+'</p><h3>نقاط الضعف</h3><p>'+esc(i.weaknesses||'—')+'</p><h3>الهدف طويل المدى</h3><p>'+esc(i.long_term_goal||'—')+'</p><h3>الأهداف قصيرة المدى</h3><table style="width:100%;border-collapse:collapse" border="1" cellpadding="8"><thead><tr><th>م</th><th>الهدف</th><th>التوزيع</th></tr></thead><tbody>'+goals.map(function(g,idx){const sc=schedules.find(function(x){return x.goal_id===g.id});return '<tr><td>'+(idx+1)+'</td><td>'+esc(g.goal_text)+'</td><td>'+esc(sc?sc.week_label:'—')+'</td></tr>'}).join('')+'</tbody></table></div>';
   window.print();
+}
+
+
+function organizationTypeLabel(v){return {school:'مدرسة',institute:'معهد',center:'مركز'}[v]||'غير محدد'}
+function organizationStageLabel(v){return {primary:'ابتدائي',middle:'متوسط',secondary:'ثانوي'}[v]||'غير محدد'}
+function organizationGenderLabel(v){return {boys:'بنين',girls:'بنات'}[v]||'غير محدد'}
+
+function renderOrganizations(){
+  const host=document.getElementById('organizationsList');if(!host)return;
+  const canEdit=currentUser?.role==='system_admin'||can('manage_org_profile');
+  document.getElementById('newOrganizationBtn')?.classList.toggle('hidden',currentUser?.role!=='system_admin');
+  if(!organizationsCache.length){
+    host.innerHTML='<div class="empty"><strong>لا توجد جهة</strong><p>أنشئ الجهة الأولى لتفعيل المواد والفصول والإسناد.</p></div>';
+    return;
+  }
+  host.innerHTML=organizationsCache.map(function(o){
+    return '<div class="card"><div class="card-head"><div><h3>'+esc(o.name)+'</h3><div class="meta"><span>'+organizationTypeLabel(o.entity_type)+'</span><span>'+organizationStageLabel(o.stage)+'</span><span>'+organizationGenderLabel(o.gender)+'</span></div></div>'+(currentOrganization&&currentOrganization.id===o.id?'<span class="tag ok">الجهة الحالية</span>':'')+'</div>'+(canEdit?'<div class="actions"><button class="btn outline sm" onclick="openOrganizationModal(\''+o.id+'\')">تعديل البيانات</button></div>':'')+'</div>';
+  }).join('');
+}
+
+function openOrganizationModal(id){
+  if(currentUser?.role!=='system_admin'&&!can('manage_org_profile')){toast('ليس لديك صلاحية إدارة بيانات الجهة');return}
+  const o=organizationsCache.find(function(x){return x.id===id});
+  organizationId.value=o?o.id:'';
+  organizationModalTitle.textContent=o?'تعديل بيانات الجهة':'جهة جديدة';
+  orgName.value=o?o.name:'';
+  orgType.value=o?.entity_type||'school';
+  orgStage.value=o?.stage||'secondary';
+  orgGender.value=o?.gender||'';
+  organizationModal.classList.add('open');
+}
+function closeOrganizationModal(){organizationModal.classList.remove('open')}
+async function saveOrganization(){
+  const id=organizationId.value;
+  const payload={name:orgName.value.trim(),entity_type:orgType.value,stage:orgStage.value,gender:orgGender.value||null,updated_at:new Date().toISOString()};
+  if(!payload.name||!payload.entity_type||!payload.stage||!payload.gender){toast('أكمل اسم الجهة ونوعها والمرحلة والجنس');return}
+  showBlocking(id?'جاري تحديث الجهة':'جاري إنشاء الجهة','يتم حفظ بيانات الجهة...');
+  try{
+    let res;
+    if(id){
+      res=await sb.from('organizations').update(payload).eq('id',id).select().single();
+    }else{
+      if(currentUser?.role!=='system_admin'){toast('إنشاء جهة جديدة متاح لمدير النظام فقط');return}
+      payload.created_by=currentUser.id;
+      res=await sb.from('organizations').insert(payload).select().single();
+      if(!res.error&&res.data){
+        const link=await sb.from('organization_memberships').insert({organization_id:res.data.id,profile_id:currentUser.id,active:true,is_primary:false,assigned_by:currentUser.id});
+        if(link.error){toast(link.error.message)}
+      }
+    }
+    if(res.error){toast(res.error.message);return}
+    closeOrganizationModal();
+    await loadCoreData();
+    toast(id?'تم تحديث بيانات الجهة':'تم إنشاء الجهة');
+  }finally{hideBlocking()}
+}
+
+function renderOrganizationSubjects(){
+  const header=document.getElementById('orgSubjectHeader');
+  const host=document.getElementById('orgSubjectsList');
+  if(!header||!host)return;
+  if(!currentOrganization){
+    header.innerHTML='<div class="empty"><strong>لا توجد جهة مرتبطة بالحساب</strong></div>';
+    host.innerHTML='';
+    return;
+  }
+  header.innerHTML='<div class="card-head"><div><h3>'+esc(currentOrganization.name)+'</h3><div class="meta"><span>'+organizationTypeLabel(currentOrganization.entity_type)+'</span><span>'+organizationStageLabel(currentOrganization.stage)+'</span><span>'+organizationGenderLabel(currentOrganization.gender)+'</span></div></div><span class="tag">بيانات ثابتة</span></div>';
+  const rows=subjectsCache.filter(function(s){return s.organization_id===currentOrganization.id});
+  if(!rows.length){
+    host.innerHTML='<div class="empty"><strong>لا توجد مواد معتمدة</strong><p>أضف المادة سطرًا واحدًا في كل مرة ثم اضغط اعتماد.</p></div>';
+    return;
+  }
+  host.innerHTML=rows.map(function(s){
+    const excluded=s.lifecycle_status==='excluded';
+    return '<div class="card"><div class="card-head"><div><h3>'+esc(s.name)+'</h3></div><span class="tag '+(excluded?'off':'ok')+'">'+(excluded?'مستبعدة':'معتمدة')+'</span></div><div class="actions"><button class="btn outline sm" onclick="editOrganizationSubject(\''+s.id+'\')">تعديل</button><button class="btn light sm" onclick="toggleOrganizationSubject(\''+s.id+'\')">'+(excluded?'إعادة تفعيل':'استبعاد')+'</button><button class="btn danger sm" onclick="deleteOrganizationSubject(\''+s.id+'\')">حذف</button></div></div>';
+  }).join('');
+}
+async function addOrganizationSubject(){
+  if(!currentOrganization){toast('لا توجد جهة مرتبطة بالحساب');return}
+  const name=orgSubjectInput.value.trim();if(!name){toast('اكتب اسم المادة');return}
+  showBlocking(orgSubjectEditId?'جاري تعديل المادة':'جاري إضافة المادة','يتم حفظ المادة ضمن الجهة...');
+  try{
+    let res;
+    if(orgSubjectEditId){
+      res=await sb.from('subjects').update({name:name,updated_at:new Date().toISOString()}).eq('id',orgSubjectEditId);
+    }else{
+      res=await sb.from('subjects').insert({name:name,organization_id:currentOrganization.id,active:true,lifecycle_status:'active',created_by:currentUser.id});
+    }
+    if(res.error){toast(res.error.message);return}
+    cancelOrganizationSubjectEdit();
+    await loadCoreData();
+    toast(orgSubjectEditId?'تم تعديل المادة':'تم اعتماد المادة');
+  }finally{hideBlocking()}
+}
+function editOrganizationSubject(id){
+  const s=subjectsCache.find(function(x){return x.id===id});if(!s)return;
+  orgSubjectEditId=id;orgSubjectInput.value=s.name;
+  orgSubjectSaveBtn.textContent='حفظ التعديل';
+  orgSubjectCancelBtn.classList.remove('hidden');
+  orgSubjectInput.focus();
+}
+function cancelOrganizationSubjectEdit(){
+  orgSubjectEditId=null;orgSubjectInput.value='';
+  if(document.getElementById('orgSubjectSaveBtn'))orgSubjectSaveBtn.textContent='اعتماد';
+  document.getElementById('orgSubjectCancelBtn')?.classList.add('hidden');
+}
+async function toggleOrganizationSubject(id){
+  const s=subjectsCache.find(function(x){return x.id===id});if(!s)return;
+  const next=s.lifecycle_status==='excluded'?'active':'excluded';
+  const res=await sb.from('subjects').update({lifecycle_status:next,updated_at:new Date().toISOString()}).eq('id',id);
+  if(res.error){toast(res.error.message);return}
+  await loadCoreData();toast(next==='active'?'تمت إعادة تفعيل المادة':'تم استبعاد المادة');
+}
+async function deleteOrganizationSubject(id){
+  if(!confirm('حذف المادة؟ إذا كانت مستخدمة في إسناد أو خطة فلن يسمح النظام بحذفها.'))return;
+  const res=await sb.from('subjects').delete().eq('id',id);
+  if(res.error){toast('لا يمكن حذف المادة المستخدمة؛ استخدم الاستبعاد بدلًا من ذلك.');return}
+  await loadCoreData();toast('تم حذف المادة');
+}
+
+function showClassTab(tab,button){
+  document.querySelectorAll('.class-tab-panel').forEach(function(x){x.classList.add('hidden')});
+  document.querySelectorAll('[data-class-tab]').forEach(function(x){x.classList.remove('active')});
+  const id={classes:'classTabClasses',students:'classTabStudents',teachers:'classTabTeachers'}[tab];
+  document.getElementById(id)?.classList.remove('hidden');button?.classList.add('active');
+}
+function fillClassGrades(){
+  const el=document.getElementById('classGrade');if(!el||!currentOrganization)return;
+  const max=currentOrganization.stage==='primary'?6:3;
+  el.innerHTML=Array.from({length:max},function(_,i){return '<option value="'+(i+1)+'">'+(i+1)+'</option>'}).join('');
+  classStageDisplay.value=organizationStageLabel(currentOrganization.stage);
+}
+function renderClassesManagement(){
+  if(!document.getElementById('classOrgInfo'))return;
+  if(!currentOrganization){
+    classOrgInfo.textContent='لا توجد جهة مرتبطة بالحساب';
+    return;
+  }
+  classOrgInfo.textContent='الجهة: '+currentOrganization.name+' — المرحلة: '+organizationStageLabel(currentOrganization.stage)+' — '+organizationGenderLabel(currentOrganization.gender);
+  fillClassGrades();
+
+  const ownClasses=classesCache.filter(function(x){return x.organization_id===currentOrganization.id});
+  classesList.innerHTML=ownClasses.length?ownClasses.map(function(cls){
+    const count=enrollmentsCache.filter(function(e){return e.class_id===cls.id&&e.active}).length;
+    return '<div class="card"><div class="card-head"><div><h3>'+esc(classLabel(cls))+'</h3><div class="meta"><span>'+count+' طالب</span></div></div><span class="tag ok">نشط</span></div></div>';
+  }).join(''):'<div class="empty"><strong>لا توجد فصول</strong><p>أنشئ الفصل الأول.</p></div>';
+
+  studentEnrollmentList.innerHTML=studentsCache.length?studentsCache.map(function(s){
+    const cls=currentStudentClass(s.id);
+    return '<div class="student-card"><div class="card-head"><div><h3>'+esc(fullStudentName(s))+'</h3><div class="meta"><span>'+esc(s.student_code)+'</span><span>'+(cls?esc(classLabel(cls)):'غير مسند')+'</span></div></div></div><div class="actions"><button class="btn primary sm" onclick="openStudentClassModal(\''+s.id+'\')">إسناد للفصل</button></div></div>';
+  }).join(''):'<div class="empty"><strong>لا توجد سجلات طلاب</strong></div>';
+
+  const teachers=directoryCache.filter(function(p){return (p.role==='teacher'||p.role==='lead_teacher')&&p.organization_id===currentOrganization.id});
+  setSelectOptions(document.getElementById('classTeacherSelect'),teachers.map(function(p){return {value:p.id,label:p.full_name}}),'اختر المعلم');
+  setSelectOptions(document.getElementById('classTeacherClassSelect'),ownClasses.map(function(x){return {value:x.id,label:classLabel(x)}}),'اختر الفصل');
+  classTeacherSubjects.innerHTML=subjectsCache.filter(function(s){return s.organization_id===currentOrganization.id&&s.lifecycle_status==='active'}).map(function(s){
+    return '<div class="perm"><input type="checkbox" data-class-subject="'+s.id+'" id="cts_'+s.id+'"><label for="cts_'+s.id+'">'+esc(s.name)+'</label></div>';
+  }).join('')||'<div class="note">لا توجد مواد معتمدة.</div>';
+
+  const activeAssignments=classSubjectAssignmentsCache.filter(function(a){return a.active&&ownClasses.some(function(c){return c.id===a.class_id})});
+  const grouped={};
+  activeAssignments.forEach(function(a){
+    const k=a.teacher_id+'|'+a.class_id;
+    if(!grouped[k])grouped[k]={teacher_id:a.teacher_id,class_id:a.class_id,rows:[]};
+    grouped[k].rows.push(a);
+  });
+  const cards=Object.values(grouped);
+  teacherClassAssignmentsList.innerHTML=cards.length?cards.map(function(g){
+    const cls=classesCache.find(function(x){return x.id===g.class_id});
+    const chips=g.rows.map(function(a){return '<span class="tag">'+esc(getSubjectName(a.subject_id))+'</span>'}).join(' ');
+    const actions=g.rows.map(function(a){return '<button class="btn danger sm" onclick="endTeacherClassSubjectAssignment(\''+a.id+'\')">إلغاء '+esc(getSubjectName(a.subject_id))+'</button>'}).join('');
+    return '<div class="card"><div class="card-head"><div><h3>'+esc(profileName(g.teacher_id))+'</h3><div class="meta"><span>'+esc(classLabel(cls))+'</span></div></div></div><div class="meta">'+chips+'</div><div class="actions">'+actions+'</div></div>';
+  }).join(''):'<div class="empty"><strong>لا توجد إسنادات معلمين</strong></div>';
+}
+async function createClass(){
+  if(!currentOrganization){toast('لا توجد جهة مرتبطة بالحساب');return}
+  const grade=Number(classGrade.value);if(!grade){toast('اختر الصف الدراسي');return}
+  showBlocking('جاري إنشاء الفصل','يتم حفظ الفصل ضمن الجهة...');
+  try{
+    const res=await sb.from('classes').insert({organization_id:currentOrganization.id,stage:currentOrganization.stage,grade_number:grade,section_label:classSection.value.trim()||null,created_by:currentUser.id});
+    if(res.error){toast(res.error.message);return}
+    classSection.value='';await loadCoreData();toast('تم إنشاء الفصل');
+  }finally{hideBlocking()}
+}
+function openStudentClassModal(id){
+  const s=studentsCache.find(function(x){return x.id===id});if(!s)return;
+  studentClassStudentId.value=id;
+  studentClassInfo.innerHTML='<strong>'+esc(fullStudentName(s))+'</strong><br><span>'+esc(s.student_code)+'</span>';
+  const ownClasses=classesCache.filter(function(x){return !currentOrganization||x.organization_id===currentOrganization.id}).map(function(x){return {value:x.id,label:classLabel(x)}});
+  setSelectOptions(studentClassSelect,ownClasses,'اختر الفصل');
+  const current=currentStudentClass(id);if(current)studentClassSelect.value=current.id;
+  studentClassModal.classList.add('open');
+}
+function closeStudentClassModal(){studentClassModal.classList.remove('open')}
+async function saveStudentClassEnrollment(){
+  const sid=studentClassStudentId.value,cid=studentClassSelect.value;if(!sid||!cid){toast('اختر الفصل');return}
+  showBlocking('جاري إسناد الطالب','يتم ربط الطالب بالفصل...');
+  try{
+    const res=await sb.rpc('enroll_student_in_class',{p_student_id:sid,p_class_id:cid});
+    if(res.error){toast(res.error.message);return}
+    closeStudentClassModal();await loadCoreData();toast('تم إسناد الطالب للفصل');
+  }finally{hideBlocking()}
+}
+async function saveTeacherClassAssignment(){
+  const teacher=classTeacherSelect.value,cls=classTeacherClassSelect.value;
+  const subjects=Array.from(document.querySelectorAll('[data-class-subject]:checked')).map(function(x){return x.dataset.classSubject});
+  if(!teacher||!cls||!subjects.length){toast('اختر المعلم والفصل ومادة واحدة على الأقل');return}
+  showBlocking('جاري اعتماد الإسناد','يتم ربط المعلم بالفصل والمواد...');
+  try{
+    const res=await sb.rpc('assign_teacher_to_class_subjects',{p_teacher_id:teacher,p_class_id:cls,p_subject_ids:subjects});
+    if(res.error){toast(res.error.message);return}
+    resetTeacherClassForm();await loadCoreData();toast('تم اعتماد إسناد المعلم');
+  }finally{hideBlocking()}
+}
+function resetTeacherClassForm(){
+  classTeacherSelect.value='';classTeacherClassSelect.value='';
+  document.querySelectorAll('[data-class-subject]').forEach(function(x){x.checked=false});
+}
+async function endTeacherClassSubjectAssignment(id){
+  if(!confirm('إلغاء هذا الإسناد؟'))return;
+  const res=await sb.rpc('end_teacher_class_subject_assignment',{p_assignment_id:id});
+  if(res.error){toast(res.error.message);return}
+  await loadCoreData();toast('تم إلغاء الإسناد');
 }
 
 async function loadAccounts(){
