@@ -1136,21 +1136,44 @@ function renderAllowedCards(){
   allowedCards.innerHTML=cards.length?cards.join(''):'<div class="empty"><strong>لا توجد أقسام إضافية</strong></div>';
 }
 async function loadCoreData(){
-  const results=await Promise.all([
+  const isAdmin=currentUser?.role==='system_admin';
+  const requests=[
     sb.from('students').select('*').order('created_at',{ascending:true}),
     sb.from('subjects').select('*').eq('active',true).order('name'),
-    sb.from('teacher_assignments').select('*').eq('active',true),
+    sb.from('classes').select('*').eq('status','active').order('created_at',{ascending:true}),
+    sb.from('student_class_enrollments').select('*').eq('active',true),
+    sb.from('teacher_class_subject_assignments').select('*').eq('active',true),
     sb.from('ieps').select('*').order('updated_at',{ascending:false}),
     sb.from('guardian_links').select('*').order('updated_at',{ascending:false}),
-    sb.rpc('directory_profiles')
-  ]);
+    sb.rpc('organization_directory_profiles'),
+    isAdmin?sb.from('organizations').select('*').order('created_at',{ascending:true}):sb.rpc('my_organizations'),
+    sb.from('organization_memberships').select('*').eq('active',true)
+  ];
+  const results=await Promise.all(requests);
   if(!results[0].error) studentsCache=results[0].data||[];
   if(!results[1].error) subjectsCache=results[1].data||[];
-  if(!results[2].error) assignmentsCache=results[2].data||[];
-  if(!results[3].error) iepsCache=results[3].data||[];
-  if(!results[4].error) guardianLinksCache=results[4].data||[];
-  if(!results[5].error) directoryCache=results[5].data||[];
-  renderStudents();renderIeps();renderGuardianLinks();populateGlobalSelectors();updateKPIs();
+  if(!results[2].error) classesCache=results[2].data||[];
+  if(!results[3].error) enrollmentsCache=results[3].data||[];
+  if(!results[4].error) classSubjectAssignmentsCache=results[4].data||[];
+  if(!results[5].error) iepsCache=results[5].data||[];
+  if(!results[6].error) guardianLinksCache=results[6].data||[];
+  if(!results[7].error) directoryCache=results[7].data||[];
+  if(!results[8].error) organizationsCache=results[8].data||[];
+  if(!results[9].error) membershipsCache=results[9].data||[];
+
+  const ownMembership=membershipsCache.find(function(m){return m.profile_id===currentUser.id&&m.is_primary})
+    || membershipsCache.find(function(m){return m.profile_id===currentUser.id});
+  currentOrganization=(ownMembership&&organizationsCache.find(function(o){return o.id===ownMembership.organization_id}))
+    || organizationsCache[0] || null;
+
+  renderStudents();
+  renderOrganizationSubjects();
+  renderClassesManagement();
+  renderIeps();
+  renderGuardianLinks();
+  renderOrganizations();
+  populateGlobalSelectors();
+  updateKPIs();
 }
 function fullStudentName(s){return [s.first_name,s.father_name,s.family_name].filter(Boolean).join(' ')}
 function studentName(id){const s=studentsCache.find(function(x){return x.id===id});return s?fullStudentName(s):'—'}
@@ -1165,18 +1188,37 @@ function setSelectOptions(el,items,placeholder){
 }
 function populateGlobalSelectors(){
   const studentItems=studentsCache.map(function(s){return {value:s.id,label:fullStudentName(s)+' — '+s.student_code}});
-  const subjectItems=subjectsCache.map(function(s){return {value:s.id,label:s.name}});
-  ['assessmentStudent','skillStudent','iepStudent','guardianStudent'].forEach(function(id){setSelectOptions(document.getElementById(id),studentItems,'اختر الطالب')});
-  ['assessmentSubject','skillSubject','iepSubject','assignmentSubject'].forEach(function(id){setSelectOptions(document.getElementById(id),subjectItems,'اختر المادة')});
-  const teachers=directoryCache.filter(function(p){return p.role==='teacher'||p.role==='lead_teacher'}).map(function(p){return {value:p.id,label:p.full_name}});
-  setSelectOptions(document.getElementById('assignmentTeacher'),teachers,'اختر المعلم');
-  const guardians=directoryCache.filter(function(p){return p.role==='guardian'}).map(function(p){return {value:p.id,label:p.full_name}});
-  setSelectOptions(document.getElementById('guardianAccount'),guardians,'اختر ولي الأمر');
-  const reportItems=iepsCache.map(function(i){return {value:i.id,label:studentName(i.student_id)+' — '+getSubjectName(i.subject_id)+' — '+i.semester}});
+  const subjectItems=subjectsCache.filter(function(s){return s.lifecycle_status==='active'}).map(function(s){return {value:s.id,label:s.name}});
+  ['skillStudent','guardianStudent'].forEach(function(id){setSelectOptions(document.getElementById(id),studentItems,'اختر الطالب')});
+  ['skillSubject'].forEach(function(id){setSelectOptions(document.getElementById(id),subjectItems,'اختر المادة')});
+
+  const orgTeachers=directoryCache.filter(function(p){
+    return (p.role==='teacher'||p.role==='lead_teacher') && (!currentOrganization || p.organization_id===currentOrganization.id);
+  }).map(function(p){return {value:p.id,label:p.full_name}});
+  setSelectOptions(document.getElementById('classTeacherSelect'),orgTeachers,'اختر المعلم');
+
+  const orgGuardians=directoryCache.filter(function(p){
+    return p.role==='guardian' && (!currentOrganization || p.organization_id===currentOrganization.id);
+  }).map(function(p){return {value:p.id,label:p.full_name}});
+  setSelectOptions(document.getElementById('guardianAccount'),orgGuardians,'اختر ولي الأمر');
+
+  const classItems=classesCache.filter(function(x){return !currentOrganization||x.organization_id===currentOrganization.id})
+    .map(function(x){return {value:x.id,label:classLabel(x)}});
+  setSelectOptions(document.getElementById('classTeacherClassSelect'),classItems,'اختر الفصل');
+  setSelectOptions(document.getElementById('studentClassSelect'),classItems,'اختر الفصل');
+
+  const orgItems=organizationsCache.map(function(o){return {value:o.id,label:o.name}});
+  setSelectOptions(document.getElementById('accOrganization'),orgItems,'اختر الجهة');
+
+  syncAssessmentOptions();
+  syncIepOptions();
+
+  const reportItems=iepsCache.map(function(i){
+    return {value:i.id,label:studentName(i.student_id)+' — '+getSubjectName(i.subject_id)+' — '+i.semester};
+  });
   setSelectOptions(document.getElementById('reportIep'),reportItems,'اختر الخطة');
   if(document.getElementById('reportIep'))document.getElementById('reportIep').onchange=renderReportSummary;
 }
-
 function renderStudents(){
   const host=document.getElementById('studentsList');if(!host)return;
   const q=(document.getElementById('studentSearch')?.value||'').trim().toLowerCase();
