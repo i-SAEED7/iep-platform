@@ -1,3 +1,19 @@
+loadSettings=async function(){
+  const res=await sb.from('app_settings').select('initiative_name').eq('id','main').single();
+  if(res.error)return;
+  if(document.getElementById('initiativeName')) initiativeName.value=res.data.initiative_name||'نحو خطة تربوية فردية رقمية تفاعلية';
+  if(document.getElementById('initiativeName')) initiativeName.disabled=currentUser?.role!=='system_admin';
+};
+
+saveSettings=function(){
+  if(currentUser?.role!=='system_admin')return;
+  clearTimeout(settingsTimer);
+  settingsTimer=setTimeout(async function(){
+    const res=await sb.from('app_settings').update({initiative_name:initiativeName.value,updated_at:new Date().toISOString(),updated_by:currentUser.id}).eq('id','main');
+    if(res.error)toast('تعذر حفظ الإعدادات');else toast('تم الحفظ');
+  },450);
+};
+
 /* IEP Platform v2 interaction layer.
    Keeps the existing Supabase/Auth connection and replaces only the affected UI workflows. */
 
@@ -322,7 +338,7 @@ openIepModal=async function(id){
   [iepStudent,iepSubject,iepYear,iepSemester,iepLongGoal,strengthItemInput,weaknessItemInput].forEach(function(el){el.disabled=readonlyRole});
   document.querySelectorAll('#iepModal .subsection .inline .btn').forEach(function(btn){btn.classList.toggle('hidden',readonlyRole)});
   saveIepBtn.classList.toggle('hidden',readonlyRole);
-  addIepGoalBtn?.classList.toggle('hidden',readonlyRole);
+  document.getElementById('addIepGoalBtn')?.classList.toggle('hidden',readonlyRole);
 
   iepGoalsArea.classList.toggle('hidden',!i);
   iepViewArea.classList.toggle('hidden',!i);
