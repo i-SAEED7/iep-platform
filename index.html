@@ -523,16 +523,67 @@ body.is-blocked{overflow:hidden;touch-action:none}
     </section>
     <section id="students" class="screen">
   <div class="section-head">
-    <div><h2>الطلاب والإسناد</h2><p>إدارة الطلاب والمواد وإسناد المعلمين بشكل فعلي</p></div>
-    <div class="actions" style="margin-top:0">
-      <button id="addStudentBtn" class="btn primary" onclick="openStudentModal()">＋ طالب جديد</button>
-      <button id="addSubjectBtn" class="btn outline" onclick="openSubjectModal()">＋ مادة</button>
-    </div>
+    <div><h2>الطلاب</h2><p>إنشاء ملفات الطلاب وتحديث بياناتهم الأساسية</p></div>
+    <button id="addStudentBtn" class="btn primary" onclick="openStudentModal()">＋ طالب جديد</button>
   </div>
   <div class="toolbar">
     <div class="field"><label>بحث</label><input id="studentSearch" class="search-input" placeholder="اسم الطالب أو الكود" oninput="renderStudents()"></div>
   </div>
   <div id="studentsList" class="data-grid cards-2"></div>
+</section>
+
+<section id="orgSubjects" class="screen">
+  <div class="section-head">
+    <div><h2>المواد التدريسية</h2><p>مواد الجهة المعتمدة التي يمكن إسنادها للمعلمين</p></div>
+  </div>
+  <div id="orgSubjectHeader" class="card"></div>
+  <div class="card" style="margin-top:12px">
+    <div class="field-row two">
+      <div class="field"><label>اسم المادة</label><input id="orgSubjectInput" placeholder="اكتب اسم المادة"></div>
+      <div class="actions" style="align-items:end"><button class="btn primary" onclick="addOrganizationSubject()">إضافة المادة</button></div>
+    </div>
+  </div>
+  <div id="orgSubjectsList" class="data-grid cards-2" style="margin-top:12px"></div>
+</section>
+
+<section id="classManagement" class="screen">
+  <div class="section-head">
+    <div><h2>الطلاب والفصول</h2><p>إنشاء الفصول ثم إسناد الطلاب والمعلمين</p></div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-class-tab="classes" onclick="showClassTab('classes',this)">إنشاء الفصول</button>
+    <button class="tab" data-class-tab="students" onclick="showClassTab('students',this)">إسناد الطلاب</button>
+    <button class="tab" data-class-tab="teachers" onclick="showClassTab('teachers',this)">إسناد المعلمين</button>
+  </div>
+
+  <div id="classTabClasses" class="class-tab-panel">
+    <div class="card">
+      <div id="classOrgInfo" class="note"></div>
+      <div class="form-grid two" style="margin-top:12px">
+        <div class="field"><label>المرحلة</label><input id="classStageDisplay" disabled></div>
+        <div class="field"><label>الصف الدراسي</label><select id="classGrade"></select></div>
+        <div class="field"><label>الفصل / الشعبة</label><input id="classSection" placeholder="اختياري مثل: أ أو 1"></div>
+      </div>
+      <div class="actions"><button class="btn primary" onclick="createClass()">إنشاء الفصل</button></div>
+    </div>
+    <div id="classesList" class="data-grid cards-2" style="margin-top:12px"></div>
+  </div>
+
+  <div id="classTabStudents" class="class-tab-panel hidden">
+    <div id="studentEnrollmentList" class="data-grid cards-2"></div>
+  </div>
+
+  <div id="classTabTeachers" class="class-tab-panel hidden">
+    <div class="card">
+      <div class="form-grid two">
+        <div class="field"><label>اختر المعلم</label><select id="classTeacherSelect"></select></div>
+        <div class="field"><label>اختر الفصل</label><select id="classTeacherClassSelect"></select></div>
+      </div>
+      <div class="field" style="margin-top:12px"><label>المواد</label><div id="classTeacherSubjects" class="permission-grid"></div></div>
+      <div class="actions"><button class="btn primary" onclick="saveTeacherClassAssignment()">اعتماد</button><button class="btn outline" onclick="resetTeacherClassForm()">إلغاء</button></div>
+    </div>
+    <div id="teacherClassAssignmentsList" class="data-grid cards-2" style="margin-top:12px"></div>
+  </div>
 </section>
 <section id="assessment" class="screen">
   <div class="section-head">
