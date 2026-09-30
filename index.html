@@ -1146,6 +1146,7 @@ async function loadCoreData(){
     sb.from('student_class_enrollments').select('*').eq('active',true),
     sb.from('teacher_class_subject_assignments').select('*').eq('active',true),
     sb.from('ieps').select('*').order('updated_at',{ascending:false}),
+    sb.from('iep_views').select('*'),
     sb.from('guardian_links').select('*').order('updated_at',{ascending:false}),
     sb.rpc('organization_directory_profiles'),
     isAdmin?sb.from('organizations').select('*').order('created_at',{ascending:true}):sb.rpc('my_organizations'),
@@ -1158,10 +1159,11 @@ async function loadCoreData(){
   if(!results[3].error) enrollmentsCache=results[3].data||[];
   if(!results[4].error) classSubjectAssignmentsCache=results[4].data||[];
   if(!results[5].error) iepsCache=results[5].data||[];
-  if(!results[6].error) guardianLinksCache=results[6].data||[];
-  if(!results[7].error) directoryCache=results[7].data||[];
-  if(!results[8].error) organizationsCache=results[8].data||[];
-  if(!results[9].error) membershipsCache=results[9].data||[];
+  if(!results[6].error) iepViewsCache=results[6].data||[];
+  if(!results[7].error) guardianLinksCache=results[7].data||[];
+  if(!results[8].error) directoryCache=results[8].data||[];
+  if(!results[9].error) organizationsCache=results[9].data||[];
+  if(!results[10].error) membershipsCache=results[10].data||[];
 
   const ownMembership=membershipsCache.find(function(m){return m.profile_id===currentUser.id&&m.is_primary})
     || membershipsCache.find(function(m){return m.profile_id===currentUser.id});
