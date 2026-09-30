@@ -1703,6 +1703,8 @@ function openAccountModal(id){
     accRole.value=u.role;
     accStatus.value=u.status;
     accPassword.value='';
+    const member=membershipsCache.find(function(m){return m.profile_id===u.id&&m.active&&m.is_primary})||membershipsCache.find(function(m){return m.profile_id===u.id&&m.active});
+    if(member)accOrganization.value=member.organization_id;
     loadRolePermissions(u.permissions||[]);
   }else{
     accName.value='';
@@ -1710,6 +1712,7 @@ function openAccountModal(id){
     accRole.value='teacher';
     accStatus.value='active';
     accPassword.value='';
+    if(currentOrganization)accOrganization.value=currentOrganization.id;
     loadRolePermissions();
   }
   accountModal.classList.add('open');
