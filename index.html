@@ -494,9 +494,9 @@ body.is-blocked{overflow:hidden;touch-action:none}
       </div>
       <div class="grid kpis">
         <div class="card kpi"><div class="muted small">الحسابات</div><div class="num" id="kpiUsers">0</div><div class="small muted">المحفوظة أونلاين</div></div>
-        <div class="card kpi"><div class="muted small">الطلاب</div><div class="num">0</div><div class="small muted">سيتم تطويرها لاحقًا</div></div>
-        <div class="card kpi"><div class="muted small">الخطط</div><div class="num">0</div><div class="small muted">سيتم تطويرها لاحقًا</div></div>
-        <div class="card kpi"><div class="muted small">التقييم</div><div class="num">0</div><div class="small muted">سيتم تطويره لاحقًا</div></div>
+        <div class="card kpi"><div class="muted small">الطلاب</div><div class="num" id="kpiStudents">0</div><div class="small muted">حسب نطاق الصلاحية</div></div>
+        <div class="card kpi"><div class="muted small">الخطط</div><div class="num" id="kpiIeps">0</div><div class="small muted">خطط محفوظة</div></div>
+        <div class="card kpi"><div class="muted small">التقييم</div><div class="num" id="kpiSkills">0</div><div class="small muted">مهارات تقييم</div></div>
       </div>
       <div class="section-head"><div><h2>الأقسام المتاحة لك</h2><p>حسب الدور والصلاحيات الفعلية المحفوظة للحساب</p></div></div>
       <div id="allowedCards" class="grid two"></div>
@@ -956,6 +956,7 @@ async function startApp(){
   renderNavigation();
   renderAllowedCards();
   await loadSettings();
+  await loadCoreData();
   if(can('manage_accounts')) await loadAccounts();
   else updateKPIs();
   goTo('dashboard');
@@ -1013,6 +1014,9 @@ async function loadCoreData(){\n  const results=await Promise.all([\n    sb.from
 }
 function updateKPIs(){
   kpiUsers.textContent=can('manage_accounts')?usersCache.length:'—';
+  if(document.getElementById('kpiStudents'))document.getElementById('kpiStudents').textContent=studentsCache.length;
+  if(document.getElementById('kpiIeps'))document.getElementById('kpiIeps').textContent=iepsCache.length;
+  if(document.getElementById('kpiSkills'))document.getElementById('kpiSkills').textContent=skillsCache.length||0;
 }
 function openDrawer(){drawer.classList.add('open')}
 function closeDrawer(){drawer.classList.remove('open')}
