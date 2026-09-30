@@ -517,30 +517,64 @@ body.is-blocked{overflow:hidden;touch-action:none}
       <div id="accountsDenied" class="permission-denied hidden">ليس لديك صلاحية إدارة الحسابات.</div>
     </section>
     <section id="students" class="screen">
-      <div class="section-head"><div><h2>الطلاب والإسناد</h2><p>هذا القسم محجوز للمرحلة التالية من التطوير</p></div></div>
-      <div class="empty"><div class="big">🎓</div><strong>لا يوجد طلاب حاليًا</strong><p>سنكمل بناء هذا القسم معك لاحقًا داخل نفس ملف HTML.</p></div>
-    </section>
-    <section id="assessment" class="screen">
-      <div class="section-head"><div><h2>تحديد المستوى</h2><p>هذا القسم محجوز للمرحلة التالية من التطوير</p></div></div>
-      <div class="empty"><div class="big">◎</div><strong>لم يُبنَ بعد</strong><p>سيتم ربط المنهج والمهارات والوكيل لاحقًا داخل نفس الصفحة.</p></div>
-    </section>
-    <section id="plans" class="screen">
-      <div class="section-head"><div><h2>الخطة التربوية الفردية</h2><p>هذا القسم محجوز للمرحلة التالية من التطوير</p></div></div>
-      <div class="empty"><div class="big">📘</div><strong>لم تُنشأ خطط بعد</strong><p>سنكمل الأقسام الخمسة للخطة لاحقًا.</p></div>
-    </section>
-    <section id="guardians" class="screen">
-      <div class="section-head"><div><h2>أولياء الأمور</h2><p>الربط بالطالب سيُبنى في المرحلة التالية</p></div></div>
-      <div class="empty"><div class="big">👪</div><strong>لا توجد روابط</strong><p>سيتم بناء Student Code ومسار الاعتماد لاحقًا.</p></div>
-    </section>
-    <section id="agent" class="screen">
-      <div class="section-head"><div><h2>الوكيل التعليمي</h2><p>واجهة مكانية فقط حاليًا</p></div></div>
-      <div class="empty"><div class="big">✦</div><strong>الوكيل غير مفعّل</strong><p>لن يتم ربط أي نموذج أو API في هذه المرحلة.</p></div>
-    </section>
-    <section id="reports" class="screen">
-      <div class="section-head"><div><h2>التقارير والطباعة</h2><p>سيتم تطويرها لاحقًا</p></div></div>
-      <div class="empty"><div class="big">▤</div><strong>لا توجد تقارير بعد</strong><p>ستُبنى من بيانات النظام لاحقًا.</p></div>
-    </section>
-    <section id="settings" class="screen">
+  <div class="section-head">
+    <div><h2>الطلاب والإسناد</h2><p>إدارة الطلاب والمواد وإسناد المعلمين بشكل فعلي</p></div>
+    <div class="actions" style="margin-top:0">
+      <button id="addStudentBtn" class="btn primary" onclick="openStudentModal()">＋ طالب جديد</button>
+      <button id="addSubjectBtn" class="btn outline" onclick="openSubjectModal()">＋ مادة</button>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div class="field"><label>بحث</label><input id="studentSearch" class="search-input" placeholder="اسم الطالب أو الكود" oninput="renderStudents()"></div>
+  </div>
+  <div id="studentsList" class="data-grid cards-2"></div>
+</section>
+<section id="assessment" class="screen">
+  <div class="section-head">
+    <div><h2>تحديد المستوى</h2><p>مهارات فعلية ومحاولات تقييم محفوظة لكل طالب ومادة</p></div>
+    <button class="btn primary" onclick="openSkillModal()">＋ إضافة مهارة</button>
+  </div>
+  <div class="toolbar">
+    <div class="field"><label>الطالب</label><select id="assessmentStudent" onchange="loadAssessmentSkills()"></select></div>
+    <div class="field"><label>المادة</label><select id="assessmentSubject" onchange="loadAssessmentSkills()"></select></div>
+  </div>
+  <div class="note">الدرجات الحالية: ٢ مستقل، ١ بعد إعادة صياغة واحدة، ٠ خطأ أو عدم استجابة. خمس محاولات لكل مهارة.</div>
+  <div id="assessmentSkillsList" class="data-grid" style="margin-top:12px"></div>
+</section>
+<section id="plans" class="screen">
+  <div class="section-head">
+    <div><h2>الخطة التربوية الفردية</h2><p>خطة مستقلة لكل طالب + مادة + فصل دراسي</p></div>
+    <button class="btn primary" onclick="openIepModal()">＋ خطة جديدة</button>
+  </div>
+  <div class="toolbar">
+    <div class="field"><label>بحث</label><input id="iepSearch" class="search-input" placeholder="اسم الطالب أو المادة" oninput="renderIeps()"></div>
+  </div>
+  <div id="iepsList" class="data-grid cards-2"></div>
+</section>
+<section id="guardians" class="screen">
+  <div class="section-head">
+    <div><h2>أولياء الأمور</h2><p>ربط حساب ولي الأمر بالطالب ومتابعة حالة الرابط</p></div>
+    <button class="btn primary" onclick="openGuardianLinkModal()">＋ ربط ولي أمر</button>
+  </div>
+  <div id="guardianLinksList" class="data-grid cards-2"></div>
+</section>
+<section id="agent" class="screen">
+  <div class="section-head"><div><h2>الوكيل التعليمي</h2><p>طبقة الوكيل ستستخدم بيانات الطالب المصرح بها فقط</p></div></div>
+  <div class="card">
+    <h3>حالة الوكيل</h3>
+    <p class="muted small">البنية التعليمية والبيانات التي سيقرأها الوكيل أصبحت موجودة فعليًا. ربط مزود الذكاء الاصطناعي نفسه لم يُعتمد بعد، لذلك لا يتم إرسال أي بيانات طالب إلى أي نموذج خارجي حاليًا.</p>
+    <div class="meta"><span>تحديد المستوى محفوظ</span><span>الأهداف محفوظة</span><span>الفصل بين الطلاب مفروض بالصلاحيات</span></div>
+  </div>
+</section>
+<section id="reports" class="screen">
+  <div class="section-head"><div><h2>التقارير والطباعة</h2><p>طباعة الخطة الحالية من البيانات المحفوظة</p></div></div>
+  <div class="toolbar">
+    <div class="field"><label>الخطة</label><select id="reportIep"></select></div>
+    <button class="btn primary" onclick="printSelectedIep()">طباعة الخطة</button>
+  </div>
+  <div id="reportSummary" class="card"><p class="muted small">اختر خطة ثم اطبعها.</p></div>
+</section>
+<section id="settings" class="screen">
       <div class="section-head"><div><h2>الإعدادات</h2><p>إعدادات النظام</p></div></div>
       <div class="grid two">
         <div class="card">
