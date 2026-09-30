@@ -1,3 +1,4 @@
+let selectedOrganizationId=null;
 loadSettings=async function(){
   const res=await sb.from('app_settings').select('initiative_name').eq('id','main').single();
   if(res.error)return;
@@ -435,3 +436,40 @@ window.addEventListener('load',function(){
     renderIeps();
   },0);
 });
+
+const originalLoadCoreDataForOrgSwitch=loadCoreData;
+loadCoreData=async function(){
+  await originalLoadCoreDataForOrgSwitch();
+  if(selectedOrganizationId){
+    const selected=organizationsCache.find(function(o){return o.id===selectedOrganizationId});
+    if(selected)currentOrganization=selected;
+  }else if(currentOrganization){
+    selectedOrganizationId=currentOrganization.id;
+  }
+  refreshActiveOrganizationSelector();
+  renderOrganizationSubjects();
+  renderClassesManagement();
+  renderOrganizations();
+  populateGlobalSelectors();
+  renderIeps();
+};
+function refreshActiveOrganizationSelector(){
+  const el=document.getElementById('activeOrganizationSelect');
+  const card=document.getElementById('activeOrganizationCard');
+  if(!el||!card)return;
+  card.classList.toggle('hidden',currentUser?.role!=='system_admin');
+  el.innerHTML=organizationsCache.map(function(o){return '<option value="'+o.id+'">'+esc(o.name)+'</option>'}).join('');
+  if(currentOrganization)el.value=currentOrganization.id;
+}
+window.setActiveOrganization=function(id){
+  const org=organizationsCache.find(function(o){return o.id===id});
+  if(!org)return;
+  selectedOrganizationId=id;
+  currentOrganization=org;
+  refreshActiveOrganizationSelector();
+  renderOrganizationSubjects();
+  renderClassesManagement();
+  populateGlobalSelectors();
+  renderIeps();
+  toast('تم اختيار الجهة: '+org.name);
+};
