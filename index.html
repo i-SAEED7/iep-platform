@@ -648,6 +648,131 @@ body.is-blocked{overflow:hidden;touch-action:none}
     <button class="btn primary" onclick="closeResetLocal()">حسنًا</button>
   </div>
 </div>
+
+<div id="studentModal" class="modal" onclick="if(event.target===this)closeStudentModal()">
+  <div class="modal-card">
+    <div class="handle"></div>
+    <h3 id="studentModalTitle">إضافة طالب</h3>
+    <input id="studentId" type="hidden">
+    <div class="form-grid two">
+      <div class="field"><label>الاسم الأول</label><input id="studentFirstName"></div>
+      <div class="field"><label>اسم الأب</label><input id="studentFatherName"></div>
+      <div class="field"><label>اسم العائلة</label><input id="studentFamilyName"></div>
+      <div class="field"><label>تاريخ الميلاد</label><input id="studentBirthDate" type="date"></div>
+      <div class="field"><label>البرنامج</label><input id="studentProgram" placeholder="فكري"></div>
+      <div class="field"><label>الصف / المستوى</label><input id="studentGrade"></div>
+      <div class="field"><label>رقم التواصل</label><input id="studentPhone" inputmode="tel"></div>
+      <div class="field"><label>الحالة</label>
+        <select id="studentStatus">
+          <option value="active">نشط</option>
+          <option value="inactive">غير نشط</option>
+          <option value="graduated">متخرج</option>
+          <option value="transferred">منقول</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions"><button class="btn primary" onclick="saveStudent()">حفظ الطالب</button><button class="btn outline" onclick="closeStudentModal()">إلغاء</button></div>
+  </div>
+</div>
+
+<div id="subjectModal" class="modal" onclick="if(event.target===this)closeSubjectModal()">
+  <div class="modal-card">
+    <div class="handle"></div>
+    <h3>إضافة مادة</h3>
+    <div class="field"><label>اسم المادة</label><input id="subjectName" placeholder="مثال: الرياضيات"></div>
+    <div class="actions"><button class="btn primary" onclick="saveSubject()">حفظ المادة</button><button class="btn outline" onclick="closeSubjectModal()">إلغاء</button></div>
+  </div>
+</div>
+
+<div id="assignmentModal" class="modal" onclick="if(event.target===this)closeAssignmentModal()">
+  <div class="modal-card">
+    <div class="handle"></div>
+    <h3>إسناد معلم ومادة</h3>
+    <input id="assignmentStudentId" type="hidden">
+    <div id="assignmentStudentName" class="note"></div>
+    <div class="form-grid two" style="margin-top:12px">
+      <div class="field"><label>المادة</label><select id="assignmentSubject"></select></div>
+      <div class="field"><label>المعلم</label><select id="assignmentTeacher"></select></div>
+    </div>
+    <div class="actions"><button class="btn primary" onclick="saveAssignment()">حفظ الإسناد</button><button class="btn outline" onclick="closeAssignmentModal()">إلغاء</button></div>
+  </div>
+</div>
+
+<div id="skillModal" class="modal" onclick="if(event.target===this)closeSkillModal()">
+  <div class="modal-card">
+    <div class="handle"></div>
+    <h3>إضافة مهارة للتقييم</h3>
+    <div class="form-grid two">
+      <div class="field"><label>الطالب</label><select id="skillStudent"></select></div>
+      <div class="field"><label>المادة</label><select id="skillSubject"></select></div>
+      <div class="field"><label>عنوان الدرس</label><input id="skillLesson"></div>
+      <div class="field"><label>رمز المهارة</label><input id="skillCode" placeholder="M1"></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label>المهارة</label><textarea id="skillText"></textarea></div>
+    <div class="field" style="margin-top:10px"><label>المتطلب السابق</label><textarea id="skillPrerequisite"></textarea></div>
+    <div class="actions"><button class="btn primary" onclick="saveSkill()">حفظ المهارة</button><button class="btn outline" onclick="closeSkillModal()">إلغاء</button></div>
+  </div>
+</div>
+
+<div id="iepModal" class="modal" onclick="if(event.target===this)closeIepModal()">
+  <div class="modal-card">
+    <div class="handle"></div>
+    <h3 id="iepModalTitle">الخطة التربوية الفردية</h3>
+    <input id="iepId" type="hidden">
+    <div class="form-grid two">
+      <div class="field"><label>الطالب</label><select id="iepStudent"></select></div>
+      <div class="field"><label>المادة</label><select id="iepSubject"></select></div>
+      <div class="field"><label>العام الدراسي</label><input id="iepYear" placeholder="1448"></div>
+      <div class="field"><label>الفصل الدراسي</label><select id="iepSemester"><option>الأول</option><option>الثاني</option><option>الثالث</option></select></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label>نقاط القوة</label><textarea id="iepStrengths"></textarea></div>
+    <div class="field" style="margin-top:10px"><label>نقاط الضعف</label><textarea id="iepWeaknesses"></textarea></div>
+    <div class="field" style="margin-top:10px"><label>الهدف طويل المدى</label><textarea id="iepLongGoal"></textarea></div>
+    <div class="field" style="margin-top:10px"><label>الحالة</label>
+      <select id="iepStatus"><option value="draft">مسودة</option><option value="active">نشطة</option><option value="pending_manager_review">بانتظار مراجعة المدير</option><option value="approved">معتمدة</option><option value="completed">مكتملة</option></select>
+    </div>
+    <div id="iepGoalsArea" class="subsection hidden">
+      <div class="card-head"><h3>الأهداف قصيرة المدى</h3><button class="btn outline sm" onclick="addGoalPrompt()">＋ هدف</button></div>
+      <div id="iepGoalsList"></div>
+    </div>
+    <div class="actions"><button class="btn primary" onclick="saveIep()">حفظ الخطة</button><button class="btn outline" onclick="closeIepModal()">إغلاق</button></div>
+  </div>
+</div>
+
+<div id="teachingModelModal" class="modal" onclick="if(event.target===this)closeTeachingModelModal()">
+  <div class="modal-card">
+    <div class="handle"></div>
+    <h3>النموذج التدريسي</h3>
+    <input id="tmIepId" type="hidden"><input id="tmGoalId" type="hidden"><input id="tmId" type="hidden">
+    <div class="field"><label>الموضوع</label><input id="tmTopic"></div>
+    <div class="field"><label>الأهداف السلوكية</label><textarea id="tmBehavioral"></textarea></div>
+    <div class="field"><label>العرض</label><textarea id="tmPresentation"></textarea></div>
+    <div class="form-grid two">
+      <div class="field"><label>الاستراتيجيات</label><textarea id="tmMethods"></textarea></div>
+      <div class="field"><label>الوسائل</label><textarea id="tmMedia"></textarea></div>
+      <div class="field"><label>التعزيز</label><textarea id="tmReinforcement"></textarea></div>
+      <div class="field"><label>التقييم</label><textarea id="tmEvaluation"></textarea></div>
+    </div>
+    <div class="field"><label>الواجب</label><textarea id="tmHomework"></textarea></div>
+    <div class="field"><label>ملاحظات التنفيذ</label><textarea id="tmNotes"></textarea></div>
+    <div class="field"><label>الحالة</label><select id="tmStatus"><option value="draft">مسودة</option><option value="published">منشور</option><option value="closed">مغلق</option><option value="cancelled">ملغى</option></select></div>
+    <div class="actions"><button class="btn primary" onclick="saveTeachingModel()">حفظ النموذج</button><button class="btn outline" onclick="closeTeachingModelModal()">إغلاق</button></div>
+  </div>
+</div>
+
+<div id="guardianLinkModal" class="modal" onclick="if(event.target===this)closeGuardianLinkModal()">
+  <div class="modal-card">
+    <div class="handle"></div>
+    <h3>ربط ولي أمر بالطالب</h3>
+    <div class="form-grid two">
+      <div class="field"><label>ولي الأمر</label><select id="guardianAccount"></select></div>
+      <div class="field"><label>الطالب</label><select id="guardianStudent"></select></div>
+    </div>
+    <div class="actions"><button class="btn primary" onclick="saveGuardianLink()">حفظ الربط</button><button class="btn outline" onclick="closeGuardianLinkModal()">إلغاء</button></div>
+  </div>
+</div>
+
+<div id="printSheet" class="print-sheet"></div>
 <div id="blockingOverlay" class="blocking-overlay hidden" aria-hidden="true">
   <div class="blocking-box" role="status" aria-live="polite">
     <div class="blocking-spinner"></div>
