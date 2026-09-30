@@ -941,7 +941,8 @@ let classesCache=[];
 let enrollmentsCache=[];
 let classSubjectAssignmentsCache=[];
 let currentOrganization=null;
-let iepObservationItems=[];\nlet orgSubjectEditId=null;
+let iepObservationItems=[];
+let orgSubjectEditId=null;
 
 
 function toast(msg){
@@ -1246,7 +1247,8 @@ function renderStudents(){
   }).join('');
 }
 function openStudentModal(id){
-  if(!id && !['system_admin','lead_teacher'].includes(currentUser?.role)){toast('ليس لديك صلاحية إنشاء طالب');return}\n  if(id && !['system_admin','lead_teacher','teacher'].includes(currentUser?.role)){toast('ليس لديك صلاحية تعديل بيانات الطالب');return}
+  if(!id && !['system_admin','lead_teacher'].includes(currentUser?.role)){toast('ليس لديك صلاحية إنشاء طالب');return}
+  if(id && !['system_admin','lead_teacher','teacher'].includes(currentUser?.role)){toast('ليس لديك صلاحية تعديل بيانات الطالب');return}
   const s=studentsCache.find(function(x){return x.id===id});
   studentId.value=s?s.id:'';studentModalTitle.textContent=s?'تعديل الطالب':'إضافة طالب';
   studentFirstName.value=s?s.first_name:'';studentFatherName.value=s?s.father_name:'';studentFamilyName.value=s?s.family_name:'';
