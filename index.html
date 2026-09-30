@@ -600,7 +600,7 @@ body.is-blocked{overflow:hidden;touch-action:none}
 <section id="plans" class="screen">
   <div class="section-head">
     <div><h2>الخطة التربوية الفردية</h2><p>خطة مستقلة لكل طالب + مادة + فصل دراسي</p></div>
-    <button class="btn primary" onclick="openIepModal()">＋ خطة جديدة</button>
+    <button id="newIepBtn" class="btn primary" onclick="openIepModal()">＋ خطة جديدة</button>
   </div>
   <div class="toolbar">
     <div class="field"><label>بحث</label><input id="iepSearch" class="search-input" placeholder="اسم الطالب أو المادة" oninput="renderIeps()"></div>
@@ -833,7 +833,7 @@ body.is-blocked{overflow:hidden;touch-action:none}
     </div>
 
     <div id="iepGoalsArea" class="subsection hidden">
-      <div class="card-head"><h3>الأهداف قصيرة المدى</h3><button class="btn outline sm" onclick="addGoalPrompt()">＋ هدف</button></div>
+      <div class="card-head"><h3>الأهداف قصيرة المدى</h3><button id="addIepGoalBtn" class="btn outline sm" onclick="addGoalPrompt()">＋ هدف</button></div>
       <div id="iepGoalsList"></div>
     </div>
     <div class="actions"><button id="saveIepBtn" class="btn primary" onclick="saveIep()">حفظ الخطة</button><button class="btn outline" onclick="closeIepModal()">إغلاق</button></div>
