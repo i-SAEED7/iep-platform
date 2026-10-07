@@ -474,6 +474,22 @@ body.is-blocked{overflow:hidden;touch-action:none}
     </div>
   </div>
 </section>
+<section id="passwordRecoveryView" class="center-page hidden">
+  <div class="auth-card">
+    <div class="logo">خ</div>
+    <div class="eyebrow">استعادة الحساب</div>
+    <h1>تعيين كلمة مرور جديدة</h1>
+    <p class="muted small">أدخل كلمة مرور جديدة للحساب. يجب ألا تقل عن 12 حرفًا.</p>
+    <div class="form-grid">
+      <div class="field"><label>كلمة المرور الجديدة</label><input id="recoveryPassword" type="password" minlength="12" autocomplete="new-password"></div>
+      <div class="field"><label>تأكيد كلمة المرور</label><input id="recoveryPasswordConfirm" type="password" minlength="12" autocomplete="new-password"></div>
+      <button class="btn primary" onclick="completePasswordRecovery()">حفظ كلمة المرور الجديدة</button>
+    </div>
+    <div class="actions">
+      <button class="btn light sm" onclick="cancelPasswordRecovery()">العودة لتسجيل الدخول</button>
+    </div>
+  </div>
+</section>
 <div id="appView" class="app hidden">
   <aside class="side">
     <div class="side-brand">
@@ -959,7 +975,7 @@ function toast(msg){
   window.__t=setTimeout(function(){el.classList.remove('show')},3000);
 }
 function showOnly(id){
-  ['setupView','loginView','appView'].forEach(function(x){document.getElementById(x).classList.add('hidden')});
+  ['setupView','loginView','passwordRecoveryView','appView'].forEach(function(x){document.getElementById(x)?.classList.add('hidden')});
   document.getElementById(id).classList.remove('hidden');
 }
 
@@ -995,8 +1011,74 @@ async function getFunctionError(res,fallback){
   }
   return fallback;
 }
+
+function recoveryParams(){
+  const hash=new URLSearchParams((window.location.hash||'').replace(/^#/,''));
+  const query=new URLSearchParams(window.location.search||'');
+  return {
+    type:hash.get('type')||query.get('type')||'',
+    accessToken:hash.get('access_token')||'',
+    refreshToken:hash.get('refresh_token')||'',
+    code:query.get('code')||''
+  };
+}
+function isPasswordRecoveryLink(){
+  const p=recoveryParams();
+  return p.type==='recovery' || (!!p.accessToken && window.location.hash.includes('type=recovery'));
+}
+async function prepareRecoverySession(){
+  const p=recoveryParams();
+  if(p.accessToken&&p.refreshToken){
+    const setRes=await sb.auth.setSession({access_token:p.accessToken,refresh_token:p.refreshToken});
+    if(setRes.error)throw setRes.error;
+    return true;
+  }
+  if(p.code){
+    const exchange=await sb.auth.exchangeCodeForSession(p.code);
+    if(exchange.error)throw exchange.error;
+    return true;
+  }
+  const current=await sb.auth.getSession();
+  return !!(current.data&&current.data.session);
+}
+function cleanRecoveryUrl(){
+  const clean=window.location.origin+window.location.pathname;
+  window.history.replaceState({},document.title,clean);
+}
+async function completePasswordRecovery(){
+  const password=recoveryPassword.value;
+  const confirmPassword=recoveryPasswordConfirm.value;
+  if(password.length<12){toast('كلمة المرور يجب ألا تقل عن 12 حرفًا');return}
+  if(password!==confirmPassword){toast('كلمتا المرور غير متطابقتين');return}
+  showBlocking('جاري تحديث كلمة المرور','يتم حفظ كلمة المرور الجديدة...');
+  try{
+    const ready=await prepareRecoverySession();
+    if(!ready){toast('رابط الاستعادة غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا.');return}
+    const res=await sb.auth.updateUser({password:password});
+    if(res.error){toast(res.error.message||'تعذر تحديث كلمة المرور');return}
+    await sb.auth.signOut();
+    recoveryPassword.value='';
+    recoveryPasswordConfirm.value='';
+    cleanRecoveryUrl();
+    showOnly('loginView');
+    toast('تم تغيير كلمة المرور. سجل الدخول بالكلمة الجديدة.');
+  }catch(e){
+    toast(e&&e.message?e.message:'تعذر إكمال استعادة كلمة المرور');
+  }finally{hideBlocking()}
+}
+async function cancelPasswordRecovery(){
+  await sb.auth.signOut();
+  cleanRecoveryUrl();
+  showOnly('loginView');
+}
+
 async function init(){
   try{
+    if(isPasswordRecoveryLink()){
+      showOnly('passwordRecoveryView');
+      try{await prepareRecoverySession()}catch(_){}
+      return;
+    }
     const boot=await sb.rpc('bootstrap_status');
     if(boot.error) throw boot.error;
     if(!boot.data || !boot.data.admin_exists){
@@ -1981,9 +2063,13 @@ function esc(s){
   });
 }
 sb.auth.onAuthStateChange(function(event,session){
+  if(event==='PASSWORD_RECOVERY'){
+    showOnly('passwordRecoveryView');
+    return;
+  }
   if(event==='SIGNED_OUT'){
     currentUser=null;
-    showOnly('loginView');
+    if(!isPasswordRecoveryLink())showOnly('loginView');
   }
 });
 window.addEventListener('load',init);
