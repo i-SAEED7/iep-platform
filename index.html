@@ -725,8 +725,15 @@ body.is-blocked{overflow:hidden;touch-action:none}
   <div class="modal-card">
     <div class="handle"></div>
     <h3>استعادة كلمة المرور</h3>
-    <p class="muted small">في هذه المرحلة يغيّر مدير النظام كلمة مرور الحساب من شاشة إدارة الحسابات.</p>
-    <button class="btn primary" onclick="closeResetLocal()">حسنًا</button>
+    <p class="muted small">أدخل بريد الحساب وسنرسل رابطًا لتعيين كلمة مرور جديدة.</p>
+    <div class="field" style="margin-top:12px">
+      <label>البريد الإلكتروني</label>
+      <input id="resetEmail" type="email" autocomplete="email" placeholder="example@email.com">
+    </div>
+    <div class="actions">
+      <button class="btn primary" onclick="sendPasswordRecovery()">إرسال رابط الاستعادة</button>
+      <button class="btn outline" onclick="closeResetLocal()">إلغاء</button>
+    </div>
   </div>
 </div>
 
@@ -1074,6 +1081,18 @@ async function cancelPasswordRecovery(){
 
 async function init(){
   try{
+    const hashParams=new URLSearchParams((window.location.hash||'').replace(/^#/,''));
+    const recoveryError=hashParams.get('error_code')||'';
+    if(recoveryError){
+      showOnly('loginView');
+      const desc=(hashParams.get('error_description')||'').replace(/\+/g,' ');
+      cleanRecoveryUrl();
+      setTimeout(function(){
+        if(recoveryError==='otp_expired') toast('رابط الاستعادة منتهي أو تم استخدامه. اطلب رابطًا جديدًا واستخدم أحدث رسالة.');
+        else toast(desc||'تعذر استخدام رابط الاستعادة.');
+      },150);
+      return;
+    }
     if(isPasswordRecoveryLink()){
       showOnly('passwordRecoveryView');
       try{await prepareRecoverySession()}catch(_){}
@@ -1905,8 +1924,33 @@ function updateKPIs(){
 }
 function openDrawer(){drawer.classList.add('open')}
 function closeDrawer(){drawer.classList.remove('open')}
-function showResetLocal(){resetModal.classList.add('open')}
+function showResetLocal(){
+  if(document.getElementById('resetEmail')) resetEmail.value=loginEmail.value.trim();
+  resetModal.classList.add('open');
+}
 function closeResetLocal(){resetModal.classList.remove('open')}
+async function sendPasswordRecovery(){
+  const email=(resetEmail.value||'').trim().toLowerCase();
+  if(!email){toast('أدخل البريد الإلكتروني');return}
+  showBlocking('جاري إرسال رابط الاستعادة','يتم إرسال رسالة إلى بريدك...');
+  try{
+    const redirectTo='https://i-saeed7.github.io/iep-platform/';
+    const res=await sb.auth.resetPasswordForEmail(email,{redirectTo:redirectTo});
+    if(res.error){
+      const msg=String(res.error.message||'');
+      if(msg.toLowerCase().includes('rate')||msg.includes('429')){
+        toast('تم بلوغ حد إرسال الرسائل مؤقتًا. حاول لاحقًا ثم استخدم أحدث رسالة فقط.');
+      }else{
+        toast(msg||'تعذر إرسال رابط الاستعادة');
+      }
+      return;
+    }
+    closeResetLocal();
+    toast('تم إرسال رابط الاستعادة. افتح أحدث رسالة في بريدك.');
+  }catch(e){
+    toast(e&&e.message?e.message:'تعذر إرسال رابط الاستعادة');
+  }finally{hideBlocking()}
+}
 
 function openAccountModal(id){
   if(!can('manage_accounts')){toast('ليس لديك صلاحية إدارة الحسابات');return}
